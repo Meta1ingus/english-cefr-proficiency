@@ -11,7 +11,7 @@
     <h1 class="mb-4">🎓 English Language CEFR Proficiency Test</h1>
 
     <div id="quizCard" class="card p-4 shadow-sm">
-      <div id="progressText" class="text-muted mb-2">Question 1 of 20</div>
+      <div id="progressText" class="text-muted mb-2">Question 1 of 60</div>
       <h5 id="questionText" class="mb-3"></h5>
       <div id="metaInfo" class="mb-2 text-secondary"></div>
       <audio id="audio" class="my-2" controls style="display: none;"></audio>
@@ -29,7 +29,7 @@
   <script>
     const DIFFICULTY_ORDER = ["A1", "A2", "B1", "B2", "C1", "C2"];
     let questions = [], usedQuestions = [], currentQuestion = {}, currentDifficultyIndex = 0;
-    let score = 0, questionCount = 0, maxQuestions = 20;
+    let score = 0, questionCount = 0, maxQuestions = 60;
 
     async function loadQuestions() {
       const res = await fetch("http://127.0.0.1:8000/questions");
