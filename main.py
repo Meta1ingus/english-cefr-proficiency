@@ -1,31 +1,24 @@
 from fastapi import FastAPI
-from typing import List
-from pydantic import BaseModel
+from fastapi.responses import JSONResponse
+import json
+import os
 
 app = FastAPI()
 
-# Define a Pydantic model for a question
-class Question(BaseModel):
-    id: int
-    questionText: str
-    audio: str = None
-    image: str = None
-    choices: List[str]
-    answerType: str
-    correctAnswer: str
+# Root route (optional welcome message)
+@app.get("/")
+def read_root():
+    return {"message": "English CEFR Proficiency API is running."}
 
-# Sample data
-questions = [
-    Question(
-        id=1,
-        questionText="What instrument is playing?",
-        audio="audio/q1.mp3",
-        choices=["Piano", "Violin", "Guitar"],
-        answerType="multiple-choice",
-        correctAnswer="Violin"
-    )
-]
-
-@app.get("/questions", response_model=List[Question])
+# Questions endpoint - loads data from questions.json
+@app.get("/questions")
 def get_questions():
-    return questions
+    try:
+        json_path = os.path.join(os.path.dirname(__file__), "questions.json")
+        with open(json_path, "r", encoding="utf-8") as f:
+            questions = json.load(f)
+        return JSONResponse(content=questions)
+    except FileNotFoundError:
+        return JSONResponse(status_code=404, content={"error": "questions.json not found"})
+    except json.JSONDecodeError:
+        return JSONResponse(status_code=500, content={"error": "Invalid JSON format"})
