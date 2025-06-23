@@ -14,9 +14,15 @@
       <div id="progressText" class="text-muted mb-2">Question 1 of 60</div>
       <h5 id="questionText" class="mb-3"></h5>
       <div id="metaInfo" class="mb-2 text-secondary"></div>
+
+      <!-- 🔹 Reading Passage Block -->
+      <div id="readingCard" class="card mb-3 p-3 d-none bg-light border-secondary-subtle">
+        <strong>Reading Passage:</strong>
+        <p id="readingText" class="mb-0"></p>
+      </div>
+
       <audio id="audio" class="my-2" controls style="display: none;"></audio>
       <img id="image" class="img-fluid my-2" style="max-height: 250px; display: none;" alt="" />
-
       <form id="choicesForm" class="mb-3"></form>
 
       <button id="submitBtn" class="btn btn-primary">Submit</button>
@@ -30,10 +36,15 @@
     const DIFFICULTY_ORDER = ["A1", "A2", "B1", "B2", "C1", "C2"];
     let questions = [], usedQuestions = [], currentQuestion = {}, currentDifficultyIndex = 0;
     let score = 0, questionCount = 0, maxQuestions = 60;
+    let passageMap = {};
 
     async function loadQuestions() {
       const res = await fetch("http://127.0.0.1:8000/questions");
       questions = await res.json();
+
+      const passagesRes = await fetch("http://127.0.0.1:8000/passages");
+      passageMap = await passagesRes.json();
+
       nextQuestion();
     }
 
@@ -71,7 +82,17 @@
       document.getElementById("questionText").textContent = q.questionText;
       document.getElementById("metaInfo").textContent = `Category: ${q.category} | Difficulty: ${q.difficulty}`;
 
-      // Audio
+      // 🔹 Show Reading Passage if present
+      const readingCard = document.getElementById("readingCard");
+      const readingText = document.getElementById("readingText");
+      if (q.readingId && passageMap[q.readingId]) {
+        readingText.textContent = passageMap[q.readingId];
+        readingCard.classList.remove("d-none");
+      } else {
+        readingCard.classList.add("d-none");
+      }
+
+      // 🔉 Audio
       const audio = document.getElementById("audio");
       if (q.audio) {
         audio.src = q.audio;
@@ -80,7 +101,7 @@
         audio.style.display = "none";
       }
 
-      // Image
+      // 🖼️ Image
       const img = document.getElementById("image");
       if (q.image) {
         img.src = q.image;
@@ -89,7 +110,7 @@
         img.style.display = "none";
       }
 
-      // Choices
+      // 🔘 Choices
       const form = document.getElementById("choicesForm");
       form.innerHTML = "";
       q.choices.forEach((choice, i) => {
@@ -103,7 +124,6 @@
           </div>`;
       });
 
-      // Button visibility
       document.getElementById("submitBtn").classList.remove("d-none");
       document.getElementById("nextBtn").classList.add("d-none");
     }

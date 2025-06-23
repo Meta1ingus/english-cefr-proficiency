@@ -1,0 +1,11 @@
+convert_questions.py
+*.txt
+scripts/
+tools/
+*.bak
+*.pyc
+__pycache__/
+venv/
+*.egg-info/
+*.docx
+*.doc
