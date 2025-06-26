@@ -5,7 +5,10 @@ from tools.db_utils import get_all_questions, get_all_passages, get_all_rubrics,
 from pydantic import BaseModel
 import whisper
 model = whisper.load_model("base")
-# Load the Whisper model for audio processing
+from utils.scoring import score_transcript
+from tools.db_utils import log_response
+from fastapi import Query
+from tools.db_utils import get_user_responses
 
 app = FastAPI()
 
@@ -41,9 +44,11 @@ def get_rubrics():
         return JSONResponse(status_code=500, content={"error": str(e)})
 
 class EvaluationRequest(BaseModel):
+    user_id: int
     question_id: int
     response_text: str
     mode: str  # "writing" or "speaking"
+
 
 @app.post("/evaluate")
 async def evaluate_response(data: EvaluationRequest):
@@ -52,12 +57,20 @@ async def evaluate_response(data: EvaluationRequest):
         if not rubric:
             return JSONResponse(status_code=404, content={"error": "Rubric not found."})
 
-        transcript = None  # Always define transcript field for consistent output
+        transcript = None
 
         if data.mode == "writing":
             transcript = data.response_text
             feedback = f"Scoring writing based on rubric: {rubric[:100]}..."
             score = 3  # Placeholder
+
+            log_response(
+                user_id=data.user_id,
+                question_id=data.question_id,
+                mode="writing",
+                transcript=transcript,
+                score=score
+            )
 
         elif data.mode == "speaking":
             audio_path = data.response_text
@@ -67,11 +80,25 @@ async def evaluate_response(data: EvaluationRequest):
                     result = model.transcribe(audio_path)
                     transcript = result["text"]
 
+                    if isinstance(transcript, list):
+                        transcript = " ".join(str(t) for t in transcript)
+                    elif not isinstance(transcript, str):
+                        transcript = str(transcript)
+
                     feedback = (
                         f"Transcription: {transcript[:100]}... "
                         f"Scoring based on rubric: {rubric[:100]}..."
                     )
-                    score = 4  # Replace this later with real evaluation logic
+                    score = score_transcript(transcript)
+
+                    log_response(
+                        user_id=data.user_id,
+                        question_id=data.question_id,
+                        mode="speaking",
+                        transcript=transcript,
+                        score=score
+                    )
+
                 except Exception as e:
                     return JSONResponse(
                         status_code=500,
@@ -82,7 +109,6 @@ async def evaluate_response(data: EvaluationRequest):
                     status_code=400,
                     content={"error": "Invalid audio format. Use .mp3 or .wav"}
                 )
-
         else:
             return JSONResponse(
                 status_code=400,
@@ -96,6 +122,17 @@ async def evaluate_response(data: EvaluationRequest):
             "feedback": feedback,
             "transcript": transcript
         }
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Evaluation failed: {str(e)}"}
+        )
 
+@app.get("/responses")
+def get_responses(user_id: int = Query(..., description="The ID of the user to retrieve responses for")):
+    try:
+        responses = get_user_responses(user_id)
+        return JSONResponse(content=responses)
+    
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})

@@ -10,3 +10,4 @@ venv/
 *.docx
 *.doc
 user_audio/
+utils/
