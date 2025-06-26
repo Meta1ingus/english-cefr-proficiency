@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>English Language CEFR Proficiency Test</title>
+  <title>English Language Proficiency Test</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
 </head>
 <body class="bg-light">
   <div class="container py-4">
-    <h1 class="mb-4">🎓 English Language CEFR Proficiency Test</h1>
+    <h1 class="mb-4">🎓 English Language Proficiency Test</h1>
 
     <div id="quizCard" class="card p-4 shadow-sm">
       <div id="progressText" class="text-muted mb-2">Question 1 of 60</div>
@@ -19,6 +19,12 @@
       <div id="readingCard" class="card mb-3 p-3 d-none bg-light border-secondary-subtle">
         <strong>Reading Passage:</strong>
         <p id="readingText" class="mb-0"></p>
+      </div>
+
+      <!-- 🔹 Rubric Preview Block -->
+      <div id="rubricPanel" class="mb-3 d-none">
+        <button class="btn btn-outline-secondary btn-sm" onclick="toggleRubric()">Show Rubric</button>
+        <div id="rubricContent" class="mt-2 text-secondary small d-none"></div>
       </div>
 
       <audio id="audio" class="my-2" controls style="display: none;"></audio>
@@ -36,14 +42,18 @@
     const DIFFICULTY_ORDER = ["A1", "A2", "B1", "B2", "C1", "C2"];
     let questions = [], usedQuestions = [], currentQuestion = {}, currentDifficultyIndex = 0;
     let score = 0, questionCount = 0, maxQuestions = 60;
-    let passageMap = {};
+    let passageMap = {}, rubrics = {};
 
     async function loadQuestions() {
-      const res = await fetch("http://127.0.0.1:8000/questions");
-      questions = await res.json();
+      const [questionsRes, passagesRes, rubricsRes] = await Promise.all([
+        fetch("http://127.0.0.1:8000/questions"),
+        fetch("http://127.0.0.1:8000/passages"),
+        fetch("http://127.0.0.1:8000/rubrics")
+      ]);
 
-      const passagesRes = await fetch("http://127.0.0.1:8000/passages");
+      questions = await questionsRes.json();
       passageMap = await passagesRes.json();
+      rubrics = await rubricsRes.json();
 
       nextQuestion();
     }
@@ -82,7 +92,7 @@
       document.getElementById("questionText").textContent = q.questionText;
       document.getElementById("metaInfo").textContent = `Category: ${q.category} | Difficulty: ${q.difficulty}`;
 
-      // 🔹 Show Reading Passage if present
+      // Reading
       const readingCard = document.getElementById("readingCard");
       const readingText = document.getElementById("readingText");
       if (q.readingId && passageMap[q.readingId]) {
@@ -92,7 +102,19 @@
         readingCard.classList.add("d-none");
       }
 
-      // 🔉 Audio
+      // Rubric Preview
+      const rubricPanel = document.getElementById("rubricPanel");
+      const rubricContent = document.getElementById("rubricContent");
+      if (q.rubricId && rubrics[q.rubricId]) {
+        rubricContent.textContent = rubrics[q.rubricId];
+        rubricPanel.classList.remove("d-none");
+        rubricContent.classList.add("d-none");
+      } else {
+        rubricContent.textContent = "";
+        rubricPanel.classList.add("d-none");
+      }
+
+      // Media
       const audio = document.getElementById("audio");
       if (q.audio) {
         audio.src = q.audio;
@@ -101,7 +123,6 @@
         audio.style.display = "none";
       }
 
-      // 🖼️ Image
       const img = document.getElementById("image");
       if (q.image) {
         img.src = q.image;
@@ -110,55 +131,136 @@
         img.style.display = "none";
       }
 
-      // 🔘 Choices
+      // Input area
       const form = document.getElementById("choicesForm");
       form.innerHTML = "";
-      q.choices.forEach((choice, i) => {
-        const id = `choice${i}`;
-        form.innerHTML += `
-          <div class="form-check">
-            <input class="form-check-input" type="radio" name="choice" id="${id}" value="${choice}">
-            <label class="form-check-label" for="${id}">
-              ${choice}
-            </label>
-          </div>`;
-      });
+
+      if (q.answerType === "spoken-response") {
+        form.innerHTML = `
+          <p><strong>Your task:</strong> Speak your response using the microphone below.</p>
+          <button id="recordBtn" class="btn btn-secondary mb-2">🎙️ Start Recording</button>
+          <p id="recordingStatus" class="text-muted mb-2"></p>
+          <audio id="playback" class="d-none" controls></audio>
+        `;
+        setupSpeakingRecording(q);
+      } else if (q.answerType === "open-ended") {
+        form.innerHTML = `
+          <label for="writtenAnswer" class="form-label">Your answer:</label>
+          <textarea id="writtenAnswer" class="form-control" rows="5" placeholder="Write at least ${q.minWordCount || 0} words..."></textarea>
+        `;
+      } else {
+        q.choices.forEach((choice, i) => {
+          const id = `choice${i}`;
+          form.innerHTML += `
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="choice" id="${id}" value="${choice}">
+              <label class="form-check-label" for="${id}">${choice}</label>
+            </div>
+          `;
+        });
+      }
 
       document.getElementById("submitBtn").classList.remove("d-none");
       document.getElementById("nextBtn").classList.add("d-none");
     }
 
+    function setupSpeakingRecording(q) {
+      const recordBtn = document.getElementById("recordBtn");
+      const status = document.getElementById("recordingStatus");
+      const playback = document.getElementById("playback");
+
+      let mediaRecorder, chunks = [];
+
+      recordBtn.onclick = async () => {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        chunks = [];
+
+        recordBtn.disabled = true;
+        status.textContent = "🎤 Recording...";
+
+        mediaRecorder.ondataavailable = e => chunks.push(e.data);
+        mediaRecorder.onstop = () => {
+          const blob = new Blob(chunks, { type: 'audio/webm' });
+          playback.src = URL.createObjectURL(blob);
+          playback.classList.remove("d-none");
+          status.textContent = `✅ Recording complete (${Math.round(blob.size / 1024)} KB)`;
+        };
+
+        mediaRecorder.start();
+        setTimeout(() => {
+          mediaRecorder.stop();
+          recordBtn.disabled = false;
+        }, 10000); // 10 seconds
+      };
+    }
+
     function checkAnswer() {
-      const selected = document.querySelector("input[name='choice']:checked");
-      if (!selected) return alert("Please select an answer.");
-
-      const isCorrect = selected.value === currentQuestion.correctAnswer;
-      if (isCorrect) score++;
-
       const result = document.getElementById("result");
-      result.classList.remove("d-none", "alert-info", "alert-danger", "alert-success");
-      result.classList.add(isCorrect ? "alert-success" : "alert-danger");
-      result.textContent = isCorrect ? "✅ Correct!" : `❌ Incorrect. Correct answer: ${currentQuestion.correctAnswer}`;
+      result.classList.remove("d-none", "alert-info", "alert-success", "alert-danger");
 
-      document.getElementById("submitBtn").classList.add("d-none");
-      document.getElementById("nextBtn").classList.remove("d-none");
-    }
+      if (currentQuestion.answerType === "spoken-response") {
+        const audio = document.getElementById("playback");
+        if (!audio || !audio.src) {
+          alert("Please record your response before submitting.");
+          return;
+        }
+        result.classList.add("alert-success");
+        result.textContent = "✅ Response recorded!";
+        score++; // Optional: handle differently
+      } else if (currentQuestion.answerType === "open-ended") {
+        const input = document.getElementById("writtenAnswer").value.trim();
+        const wordCount = input.split(/\s+/).filter(Boolean).length;
+        const minWords = currentQuestion.minWordCount || 50;
 
-    function showFinalResults() {
-      document.getElementById("quizCard").classList.add("d-none");
-      const result = document.getElementById("result");
-      result.classList.remove("d-none", "alert-danger", "alert-success");
-      result.classList.add("alert-info");
-      result.textContent = `Test complete! You scored ${score} out of ${maxQuestions}.`;
-    }
+if (wordCount >= minWords) {
+  result.classList.add("alert-success");
+  result.textContent = `✅ Answer submitted! Word count: ${wordCount}`;
+  score++; // Optional: assign score differently
+} else {
+  result.classList.add("alert-danger");
+  result.textContent = `❌ Minimum word count not met. You wrote ${wordCount} words, but at least ${minWords} are required.`;
+  return;
+}
+} else {
+  const selected = document.querySelector("input[name='choice']:checked");
+  if (!selected) {
+    alert("Please select an answer.");
+    return;
+  }
 
-    document.getElementById("submitBtn").addEventListener("click", checkAnswer);
-    document.getElementById("nextBtn").addEventListener("click", () => {
-      document.getElementById("result").classList.add("d-none");
-      nextQuestion();
-    });
+  const isCorrect = selected.value === currentQuestion.correctAnswer;
+  result.classList.add(isCorrect ? "alert-success" : "alert-danger");
+  result.textContent = isCorrect
+    ? "✅ Correct!"
+    : `❌ Incorrect. Correct answer: ${currentQuestion.correctAnswer}`;
+  if (isCorrect) score++;
+}
 
-    loadQuestions();
-  </script>
+document.getElementById("submitBtn").classList.add("d-none");
+document.getElementById("nextBtn").classList.remove("d-none");
+}
+
+function showFinalResults() {
+  document.getElementById("quizCard").classList.add("d-none");
+  const result = document.getElementById("result");
+  result.classList.remove("alert-danger", "alert-success");
+  result.classList.add("alert-info");
+  result.textContent = `Test complete! You scored ${score} out of ${maxQuestions}.`;
+}
+
+function toggleRubric() {
+  const content = document.getElementById("rubricContent");
+  content.classList.toggle("d-none");
+}
+
+document.getElementById("submitBtn").addEventListener("click", checkAnswer);
+document.getElementById("nextBtn").addEventListener("click", () => {
+  document.getElementById("result").classList.add("d-none");
+  nextQuestion();
+});
+
+loadQuestions();
+</script>
 </body>
 </html>

@@ -1,24 +1,37 @@
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
-import json
-import os
+from fastapi.staticfiles import StaticFiles
+from tools.db_utils import get_all_questions, get_all_passages, get_all_rubrics  # Ensure these functions exist in db_utils.py
 
 app = FastAPI()
 
-# Root route (optional welcome message)
+# Static route for serving audio files
+app.mount("/audio_files", StaticFiles(directory="audio_files"), name="audio_files")
+
 @app.get("/")
 def read_root():
     return {"message": "English CEFR Proficiency API is running."}
 
-# Questions endpoint - loads data from questions.json
 @app.get("/questions")
 def get_questions():
     try:
-        json_path = os.path.join(os.path.dirname(__file__), "questions.json")
-        with open(json_path, "r", encoding="utf-8") as f:
-            questions = json.load(f)
+        questions = get_all_questions()
         return JSONResponse(content=questions)
-    except FileNotFoundError:
-        return JSONResponse(status_code=404, content={"error": "questions.json not found"})
-    except json.JSONDecodeError:
-        return JSONResponse(status_code=500, content={"error": "Invalid JSON format"})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+@app.get("/passages")
+def get_passages():
+    try:
+        passages = get_all_passages()
+        return JSONResponse(content=passages)
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+@app.get("/rubrics")
+def get_rubrics():
+    try:
+        rubrics = get_all_rubrics()
+        return JSONResponse(content=rubrics)
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
