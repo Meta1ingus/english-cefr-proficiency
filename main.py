@@ -4,13 +4,26 @@ from fastapi.staticfiles import StaticFiles
 from tools.db_utils import get_all_questions, get_all_passages, get_all_rubrics, get_rubric_by_question_id
 from pydantic import BaseModel
 import whisper
-model = whisper.load_model("base")
 from utils.scoring import score_transcript
 from tools.db_utils import log_response
 from fastapi import Query
 from tools.db_utils import get_user_responses
+from tools.db_utils import get_user_summary
+
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://127.0.0.1:8001"],  # Your HTML server origin
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+model = whisper.load_model("base")
 
 # Static route for serving audio files
 app.mount("/audio_files", StaticFiles(directory="audio_files"), name="audio_files")
@@ -134,5 +147,13 @@ def get_responses(user_id: int = Query(..., description="The ID of the user to r
         responses = get_user_responses(user_id)
         return JSONResponse(content=responses)
     
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+@app.get("/summary")
+def get_summary(user_id: str = Query(..., description="User ID to generate performance summary for")):
+    try:
+        summary = get_user_summary(user_id)
+        return JSONResponse(content=summary)
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
