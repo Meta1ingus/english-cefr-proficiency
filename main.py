@@ -5,6 +5,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import os
 import sys
+import socket
+from fastapi.responses import JSONResponse
 
 # Include current file’s directory in Python path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -36,18 +38,14 @@ app.add_middleware(
 # Serve static audio files
 app.mount("/audio", StaticFiles(directory="public/audio"), name="audio")
 
-@app.get("/debug-db")
-def debug_db():
+@app.get("/debug-db-host")
+def debug_db_host():
     try:
-        conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT 1;")
-        cursor.fetchone()
-        cursor.close()
-        conn.close()
-        return {"status": "connected"}
+        hostname = os.getenv("DB_HOST")
+        ip = socket.gethostbyname(hostname)
+        return JSONResponse(content={"host": hostname, "ip": ip})
     except Exception as e:
-        return {"error": str(e)}
+        return JSONResponse(status_code=500, content={"error": str(e)})
 
 @app.get("/")
 def read_root():
