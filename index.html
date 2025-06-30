@@ -145,6 +145,7 @@
         ]);
 
         questions = await questionsRes.json();
+        console.log("📦 Questions loaded:", questions);
         passageMap = await passagesRes.json();
         rubrics = await rubricsRes.json();
 
@@ -348,6 +349,19 @@
         }
         result.classList.add("alert-success");
         result.textContent = "✅ Response recorded! (Review not available in this demo)";
+        fetch(`${API_BASE}/evaluate`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user_id: DEMO_USER_ID,
+            mode: "speaking",
+            transcript: "This is a placeholder transcript"  // Replace with real transcript later
+  })
+})
+.then(res => res.json())
+.then(data => console.log("🎙️ Speaking evaluation response:", data))
+.catch(err => console.error("❌ Speaking evaluation error:", err));
+
         score++; // Score is incremented, but actual assessment would be done by AI/human
       } else if (currentQuestion.answerType === "open-ended") {
         const input = document.getElementById("writtenAnswer").value.trim();
@@ -357,6 +371,18 @@
         if (wordCount >= minWords) {
           result.classList.add("alert-success");
           result.textContent = `✅ Answer submitted! Word count: ${wordCount}`;
+          fetch(`${API_BASE}/evaluate`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              user_id: DEMO_USER_ID,
+              mode: "writing",
+              transcript: input
+            })
+          })
+.then(res => res.json())
+.then(data => console.log("📝 Writing evaluation response:", data))
+.catch(err => console.error("❌ Writing evaluation error:", err));
           score++; // Score is incremented, but actual assessment would be done by AI/human
         } else {
           result.classList.add("alert-danger");
