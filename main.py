@@ -17,7 +17,8 @@ from tools.db_utils import (
     get_rubric_by_question_id,
     log_response,
     get_user_responses,
-    get_user_summary
+    get_user_summary,
+    score_transcript_by_rubric
 )
 from utils.scoring import score_transcript
 from utils.transcriber import transcribe_with_huggingface
@@ -26,7 +27,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # or ["http://127.0.0.1:8001"] for more restriction
+    allow_origins=["https://meta1ingus.github.io"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -35,9 +35,9 @@ def get_all_questions():
     # 2. Get choices
     cursor.execute("""
         SELECT question_id, label, choice_text
-        FROM choices
+    FROM choices
         ORDER BY question_id, label;
-    """)
+""")
     choice_rows = cursor.fetchall()
 
     # 3. Group choices by question_id and flatten to ["A. Text", "B. Text", "C. Text"]
@@ -90,15 +90,16 @@ def get_rubric_by_question_id(question_id):
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT r.description
+        SELECT r.rubric_id, r.description 
         FROM questions q
         JOIN rubrics r ON q.rubric_id = r.rubric_id
         WHERE q.id = %s;
-    """, (question_id,))
+""", (question_id,))
     row = cursor.fetchone()
     cursor.close()
     conn.close()
-    return row[0] if row else None
+    return {"rubric_id": row[0], "description": row[1]} if row else None
+
 
 def log_response(user_id, question_id, mode, transcript, score):
     conn = get_connection()
@@ -149,7 +150,7 @@ def get_user_summary(user_id: str):
         SELECT COUNT(*), AVG(score)
         FROM responses
         WHERE user_id = %s;
-    """, (user_id,))
+""", (user_id,))
     row = cursor.fetchone()
     if row is not None:
         total, avg = row
@@ -175,3 +176,34 @@ def get_user_summary(user_id: str):
         "most_recent_mode": recent[1] if recent else None,
         "last_updated": recent[2].isoformat() if recent else None
     }
+
+def score_transcript_by_rubric(transcript: str, rubric_id: int) -> tuple[float, dict]:
+    conn = get_connection()  # Corrected from get_db_connection
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT criterion, max_score
+        FROM rubric_criteria
+        WHERE rubric_id = %s
+    """, (rubric_id,))
+    rows = cur.fetchall()
+
+    criteria_scores = {}
+    total = 0
+
+    for criterion, max_score in rows:
+        # ⚙️ Placeholder scoring logic — refine as needed
+        if criterion.lower() == "fluency":
+            score = min(max_score, len(transcript.split()) // 8)
+        elif criterion.lower() == "grammar":
+            score = min(max_score, 4)  # Simulate basic grammar scoring
+        elif criterion.lower() == "vocabulary":
+            score = min(max_score, 3 + ("however" in transcript.lower()))
+        else:
+            score = max_score // 2  # Default mid-range score
+
+        criteria_scores[criterion] = score
+        total += score
+
+    average_score = round(total / len(criteria_scores), 1) if criteria_scores else 0.0
+    return average_score, criteria_scores
