@@ -14,6 +14,7 @@ from tools.db_utils import (
     get_all_questions,
     get_all_passages,
     get_all_rubrics,
+    get_connection,
     get_rubric_by_question_id,
     log_response,
     get_user_responses,
@@ -35,6 +36,18 @@ app.add_middleware(
 # Serve static audio files
 app.mount("/audio", StaticFiles(directory="public/audio"), name="audio")
 
+@app.get("/debug-db")
+def debug_db():
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT 1;")
+        cursor.fetchone()
+        cursor.close()
+        conn.close()
+        return {"status": "connected"}
+    except Exception as e:
+        return {"error": str(e)}
 
 @app.get("/")
 def read_root():
