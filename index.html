@@ -242,7 +242,7 @@
       // Handle Audio media display
       const audio = document.getElementById("audio");
       if (q.audio) {
-        audio.src = q.audio;
+        audio.src = `${API_BASE_URL}/audio/${q.audio}`;
         audio.style.display = "block";
       } else {
         audio.style.display = "none";
