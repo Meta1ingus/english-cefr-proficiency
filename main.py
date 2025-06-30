@@ -33,7 +33,7 @@ app.add_middleware(
 )
 
 # Serve static audio files
-app.mount("/audio", StaticFiles(directory="public/audio"), name="audio")
+app.mount("/audio", StaticFiles(directory=os.path.join("public", "audio")), name="audio")
 
 @app.get("/")
 def read_root():
