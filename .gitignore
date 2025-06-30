@@ -1,5 +1,4 @@
 scripts/
-tools/
 *.bak
 *.pyc
 __pycache__/
@@ -8,4 +7,11 @@ venv/
 *.docx
 *.doc
 user_audio/
-utils/
+# Ignore all files in tools/ except __init__.py and db_utils.py
+tools/*
+!tools/__init__.py
+!tools/db_utils.py
+# Same for utils/
+utils/*
+!utils/__init__.py
+!utils/scoring.py
