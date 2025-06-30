@@ -116,8 +116,11 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
+<!-- JavaScript -->
+
   <script>
     const DIFFICULTY_ORDER = ["A1", "A2", "B1", "B2", "C1", "C2"];
+    const API_BASE = "https://cefr-quiz-backend.onrender.com";
     let questions = [], usedQuestions = [], currentQuestion = {}, currentDifficultyIndex = 0;
     let score = 0, questionCount = 0, maxQuestions = 60; // Max questions is fixed for this demo
     let passageMap = {}, rubrics = {};
@@ -136,9 +139,9 @@
         currentDifficultyIndex = 0;
 
         const [questionsRes, passagesRes, rubricsRes] = await Promise.all([
-          fetch("http://127.0.0.1:8000/questions"),
-          fetch("http://127.0.0.1:8000/passages"),
-          fetch("http://127.0.0.1:8000/rubrics")
+          fetch(`${API_BASE}/questions`),
+          fetch(`${API_BASE}/passages`),
+          fetch(`${API_BASE}/rubrics`)
         ]);
 
         questions = await questionsRes.json();
@@ -401,7 +404,7 @@
     async function showSummary(userId) {
       try {
         // Fetch summary data from your backend endpoint
-        const res = await fetch(`http://127.0.0.1:8000/summary?user_id=${userId}`);
+        const res = await fetch(`${API_BASE}/summary?user_id=${userId}`);
         if (!res.ok) {
             throw new Error(`HTTP error! status: ${res.status}`);
         }
