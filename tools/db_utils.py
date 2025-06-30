@@ -14,7 +14,8 @@ def get_connection():
         user=os.getenv("DB_USER"),
         password=os.getenv("DB_PASS"),
         host=os.getenv("DB_HOST"),
-        port=os.getenv("DB_PORT", "5432")
+        port=os.getenv("DB_PORT", "5432"),
+        sslmode="require"  # required for external connections
     )
 
 def get_all_questions():
