@@ -9,8 +9,11 @@ from tools.db_utils import log_response
 from fastapi import Query
 from tools.db_utils import get_user_responses
 from tools.db_utils import get_user_summary
-
 from fastapi.middleware.cors import CORSMiddleware
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 
 app = FastAPI()
 
