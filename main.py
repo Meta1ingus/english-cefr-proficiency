@@ -22,11 +22,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 model = whisper.load_model("base")
 
 # Static route for serving audio files
-app.mount("/audio_files", StaticFiles(directory="audio_files"), name="audio_files")
+app.mount("/audio", StaticFiles(directory="public/audio"), name="audio")
 
 @app.get("/")
 def read_root():

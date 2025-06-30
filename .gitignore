@@ -1,5 +1,3 @@
-convert_questions.py
-*.txt
 scripts/
 tools/
 *.bak
