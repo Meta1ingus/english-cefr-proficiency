@@ -90,14 +90,10 @@ async def evaluate_response(data: EvaluationRequest):
             if len(transcript.split()) < 5:
                 return JSONResponse(status_code=400, content={"error": "Text too short to evaluate."})
 
-            # Placeholder for scoring logic
-            criteria_scores = {
-                "grammar": 3,
-                "vocabulary": 2,
-                "structure": 3
-            }
-            score = round(sum(criteria_scores.values()) / len(criteria_scores), 1)
-            feedback = f"Writing evaluated on grammar, vocabulary, and structure. Avg score: {score}/5."
+            rubric_id = rubric["rubric_id"] if isinstance(rubric, dict) else rubric.rubric_id
+            score, criteria_scores = score_transcript_by_rubric(transcript, rubric_id)
+            feedback = f"Writing scored using rubric: {len(criteria_scores)} criteria. Avg: {score}/5"
+
 
         # --- Mode: Speaking ---
         elif data.mode == "speaking":
@@ -119,9 +115,12 @@ async def evaluate_response(data: EvaluationRequest):
                 if len(transcript.split()) < 4:
                     return JSONResponse(status_code=400, content={"error": "Speech too short to evaluate."})
 
-                raw_score = score_transcript(transcript)
-                score = round(min(5.0, max(0.0, raw_score / 20)), 1)
-                feedback = f"Speech evaluated from transcription. Confidence: {confidence if confidence else 'N/A'}"
+                rubric_id = rubric["rubric_id"] if isinstance(rubric, dict) else rubric.rubric_id
+                score, criteria_scores = score_transcript_by_rubric(transcript, rubric_id)
+                feedback = (
+                    f"Speech scored using rubric: {len(criteria_scores)} criteria. "
+                    f"Avg: {score}/5. Confidence: {confidence if confidence else 'N/A'}"
+                )
 
             except Exception as e:
                 return JSONResponse(status_code=500, content={"error": f"Transcription failed: {str(e)}"})
