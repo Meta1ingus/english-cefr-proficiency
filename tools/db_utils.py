@@ -24,10 +24,12 @@ def get_all_questions():
 
     # 1. Get questions
     cursor.execute("""
-        SELECT id, question_text, category, difficulty, answer_type,
-               correct_answer, min_word_count, writing_type, rubric_id, reading_id
-        FROM questions;
-    """)
+    SELECT id, question_text, category, difficulty, answer_type,
+           correct_answer, min_word_count, writing_type,
+           rubric_id, reading_id, audio
+    FROM questions;"""
+    )
+
     question_rows = cursor.fetchall()
 
     # 2. Get choices
@@ -60,7 +62,8 @@ def get_all_questions():
             "writingType": q[7],
             "rubricId": q[8],
             "readingId": q[9],
-            "choices": choice_map.get(q[0], [])
+            "audio": q[10],
+            "choices": choice_map.get(q[0], []),
         }
         for q in question_rows
     ]
