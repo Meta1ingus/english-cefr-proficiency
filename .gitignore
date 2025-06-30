@@ -15,3 +15,4 @@ tools/*
 utils/*
 !utils/__init__.py
 !utils/scoring.py
+!utils/transcriber.py
