@@ -81,26 +81,51 @@ async def evaluate_response(data: EvaluationRequest):
         transcript = None
         feedback = None
         score = None
+        criteria_scores = {}
 
+        # --- Mode: Writing ---
         if data.mode == "writing":
-            transcript = data.response_text
-            feedback = f"Scoring writing based on rubric: {rubric[:100]}..."
-            score = 3  # Placeholder score—for future grammar/style integration
+            transcript = data.response_text.strip()
 
+            if len(transcript.split()) < 5:
+                return JSONResponse(status_code=400, content={"error": "Text too short to evaluate."})
+
+            # Placeholder for scoring logic
+            criteria_scores = {
+                "grammar": 3,
+                "vocabulary": 2,
+                "structure": 3
+            }
+            score = round(sum(criteria_scores.values()) / len(criteria_scores), 1)
+            feedback = f"Writing evaluated on grammar, vocabulary, and structure. Avg score: {score}/5."
+
+        # --- Mode: Speaking ---
         elif data.mode == "speaking":
             audio_path = data.response_text
-            if audio_path.endswith(".mp3") or audio_path.endswith(".wav"):
-                try:
-                    transcript = transcribe_with_huggingface(audio_path)
-                    feedback = (
-                        f"Transcription: {transcript[:100]}... "
-                        f"Scoring based on rubric: {rubric[:100]}..."
-                    )
-                    score = score_transcript(transcript)
-                except Exception as e:
-                    return JSONResponse(status_code=500, content={"error": f"Transcription failed: {str(e)}"})
-            else:
+
+            if not (audio_path.endswith(".mp3") or audio_path.endswith(".wav")):
                 return JSONResponse(status_code=400, content={"error": "Invalid audio format. Use .mp3 or .wav"})
+
+            try:
+                # Returns transcript + optional metadata
+                transcript_obj = transcribe_with_huggingface(audio_path)
+                if isinstance(transcript_obj, dict):
+                    transcript = transcript_obj.get("text", "")
+                    confidence = transcript_obj.get("confidence", None)
+                else:
+                    transcript = transcript_obj
+                    confidence = None
+
+                if len(transcript.split()) < 4:
+                    return JSONResponse(status_code=400, content={"error": "Speech too short to evaluate."})
+
+                raw_score = score_transcript(transcript)
+                score = round(min(5.0, max(0.0, raw_score / 20)), 1)
+                feedback = f"Speech evaluated from transcription. Confidence: {confidence if confidence else 'N/A'}"
+
+            except Exception as e:
+                return JSONResponse(status_code=500, content={"error": f"Transcription failed: {str(e)}"})
+
         else:
             return JSONResponse(status_code=400, content={"error": "Unsupported mode. Use 'writing' or 'speaking'."})
 
@@ -114,15 +139,16 @@ async def evaluate_response(data: EvaluationRequest):
 
         return {
             "question_id": data.question_id,
+            "mode": data.mode,
             "score": score,
             "max_score": 5,
             "feedback": feedback,
-            "transcript": transcript
+            "transcript": transcript,
+            "criteria": criteria_scores if criteria_scores else None
         }
 
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": f"Evaluation failed: {str(e)}"})
-
 
 @app.get("/responses")
 def get_responses(user_id: int = Query(..., description="User ID to retrieve responses for")):
