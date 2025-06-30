@@ -3,8 +3,10 @@ import psycopg2
 from dotenv import load_dotenv
 from collections import defaultdict
 
-# --- Load environment variables from tools/.env ---
-load_dotenv(dotenv_path="tools/.env")
+# Only load .env in local development
+if os.getenv("RENDER") is None:  # Optional: define your own flag
+    from dotenv import load_dotenv
+    load_dotenv(dotenv_path="tools/.env")
 
 def get_connection():
     return psycopg2.connect(
@@ -12,7 +14,7 @@ def get_connection():
         user=os.getenv("DB_USER"),
         password=os.getenv("DB_PASS"),
         host=os.getenv("DB_HOST"),
-        port=os.getenv("DB_PORT")
+        port=os.getenv("DB_PORT", "5432")
     )
 
 def get_all_questions():
