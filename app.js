@@ -1,6 +1,6 @@
 const DIFFICULTY_ORDER = ["A1", "A2", "B1", "B2", "C1", "C2"];
     let questions = [], usedQuestions = [], currentQuestion = {}, currentDifficultyIndex = 0;
-    let score = 0, questionCount = 0, maxQuestions = 60; // Max questions is fixed for this demo
+    let score = 0, questionCount = 0, maxQuestions = 60; // Max questions is fixed
     let passageMap = {}, rubrics = {};
 
     // Generate a simple, consistent user ID for demonstration
@@ -278,7 +278,8 @@ const DIFFICULTY_ORDER = ["A1", "A2", "B1", "B2", "C1", "C2"];
           return;
         }
 
-        const isCorrect = selected.value === currentQuestion.correctAnswer;
+        const normalize = (str) => str.trim().toLowerCase();
+        const isCorrect = normalize(selected.value) === normalize(currentQuestion.correctAnswer);
         result.classList.add(isCorrect ? "alert-success" : "alert-danger");
         result.textContent = isCorrect
           ? "✅ Correct!"
