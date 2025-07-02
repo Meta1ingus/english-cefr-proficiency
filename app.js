@@ -102,14 +102,22 @@ console.log("📊 Difficulty distribution:", difficultyCounts);
         return showFinalResults(); // End the test if max questions reached
       }
 
-      let pool = getCurrentPool();
-if (pool.length === 0) {
-  // 👇 Attempt with repeats as fallback
-  pool = getCurrentPool(true);
+let pool = [];
+while (currentDifficultyIndex < DIFFICULTY_ORDER.length) {
+  pool = getCurrentPool();
   if (pool.length === 0) {
-    console.warn("No questions available — even with repeats.");
-    return showFinalResults();
+    pool = getCurrentPool(true); // Try with repeats
+    if (pool.length === 0) {
+      currentDifficultyIndex++; // Skip to next level
+      continue;
+    }
   }
+  break; // Found a valid pool
+}
+
+if (pool.length === 0) {
+  console.warn("No questions available — even with repeats.");
+  return showFinalResults();
 }
 
       currentQuestion = pickRandom(pool);
