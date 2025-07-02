@@ -31,7 +31,7 @@ document.getElementById("startBtn").addEventListener("click", async () => {
     document.getElementById("quizCard").classList.remove("d-none");
 
     // Start first question
-    loadQuestion();
+    nextQuestion();
   } catch (err) {
     console.error("Registration error:", err);
     alert("Something went wrong — please try again.");
@@ -43,6 +43,7 @@ const DIFFICULTY_ORDER = ["A1", "A2", "B1", "B2", "C1", "C2"];
 let questions = [], usedQuestions = [], currentQuestion = {}, currentDifficultyIndex = 0;
 let score = 0, questionCount = 0, maxQuestions = 60;
 let passageMap = {}, rubrics = {};
+let reviewLog = []; // Stores answer data for summary review
 
     // Function to load questions, passages, and rubrics from local endpoints
     async function loadQuestions() {
