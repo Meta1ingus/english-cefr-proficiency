@@ -40,6 +40,10 @@ document.getElementById("startBtn").addEventListener("click", async () => {
 
 // 👇 Continue with question/game variables
 const DIFFICULTY_ORDER = ["A1", "A2", "B1", "B2", "C1", "C2"];
+return questions.filter(q =>
+  q.difficulty === level &&
+  (allowRepeats || !usedQuestions.includes(q.id))
+);
 let questions = [], usedQuestions = [], currentQuestion = {}, currentDifficultyIndex = 0;
 let score = 0, questionCount = 0, maxQuestions = 60;
 let passageMap = {}, rubrics = {};
@@ -96,19 +100,15 @@ let reviewLog = []; // Stores answer data for summary review
         return showFinalResults(); // End the test if max questions reached
       }
 
-      const pool = getCurrentPool();
-      
-      // If no questions left at current difficulty, try next difficulty level
-      if (pool.length === 0) {
-        if (currentDifficultyIndex < DIFFICULTY_ORDER.length - 1) {
-          currentDifficultyIndex++;
-          return nextQuestion(); // Recursively call to get question from next level
-        } else {
-          // No more questions available across all difficulties
-          console.warn("No more unique questions available across all difficulty levels.");
-          return showFinalResults();
-        }
-      }
+      let pool = getCurrentPool();
+if (pool.length === 0) {
+  // 👇 Attempt with repeats as fallback
+  pool = getCurrentPool(true);
+  if (pool.length === 0) {
+    console.warn("No questions available — even with repeats.");
+    return showFinalResults();
+  }
+}
 
       currentQuestion = pickRandom(pool);
       if (!currentQuestion) {
