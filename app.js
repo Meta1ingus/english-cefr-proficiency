@@ -207,22 +207,21 @@ if (q.answerType === "open-ended") {
   `;
 }
 
-// ✅ Unconditional rendering of choices (if present)
-if (q.choices?.length) {
+// ✅ Only render choices for multiple-choice questions
+if (q.answerType === "multiple-choice" && q.choices?.length) {
   q.choices.forEach((choice, i) => {
-  const id = `choice${i}`;
-  const text = choice.choice_text ?? "[No text]";
-  const value = choice.id;
+    const id = `choice${i}`;
+    const text = choice.choice_text ?? "[No text]";
+    const value = choice.id;
 
-  form.innerHTML += `
-    <div class="form-check">
-      <input class="form-check-input" type="radio" name="choice" id="${id}" value="${value}">
-      <label class="form-check-label" for="${id}">${text}</label>
-    </div>
-  `;
-});
-} else if (q.choices) {
-  // Only warn if `q.choices` is defined but empty
+    form.innerHTML += `
+      <div class="form-check">
+        <input class="form-check-input" type="radio" name="choice" id="${id}" value="${value}">
+        <label class="form-check-label" for="${id}">${text}</label>
+      </div>
+    `;
+  });
+} else if (q.answerType === "multiple-choice" && q.choices) {
   form.innerHTML += `<p class="text-danger">⚠️ No choices available for this question.</p>`;
 }
 
