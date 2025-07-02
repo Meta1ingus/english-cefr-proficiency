@@ -310,6 +310,13 @@ result.textContent = "";
         if (wordCount >= minWords) {
           result.classList.add("alert-success");
           result.textContent = `✅ Answer submitted! Word count: ${wordCount}`;
+          console.log("📤 Evaluation payload:", {
+  user_id,
+  mode: currentQuestion.answerType === "spoken-response" ? "speaking" : "writing",
+  transcript: currentQuestion.answerType === "spoken-response"
+    ? "This is a placeholder transcript"
+    : document.getElementById("writtenAnswer")?.value.trim()
+});
           fetch(`${API_BASE_URL}/evaluate`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
