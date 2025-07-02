@@ -1,11 +1,29 @@
+let userId = null;
+
+async function getOrCreateUserId() {
+  let name = "";
+
+  while (!name) {
+    name = prompt("Please enter your name to begin the test:");
+    if (name === null) return; // user cancelled
+    name = name.trim();
+  }
+
+  const response = await fetch("/register_user", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name })
+  });
+
+  const data = await response.json();
+  userId = data.user_id;
+  localStorage.setItem("userId", userId);
+}
+
 const DIFFICULTY_ORDER = ["A1", "A2", "B1", "B2", "C1", "C2"];
     let questions = [], usedQuestions = [], currentQuestion = {}, currentDifficultyIndex = 0;
     let score = 0, questionCount = 0, maxQuestions = 60; // Max questions is fixed
     let passageMap = {}, rubrics = {};
-
-    // Generate a simple, consistent user ID for demonstration
-    // In a real application, this would come from an authentication system
-    const DEMO_USER_ID = "demo_user_123";
 
     import { API_BASE_URL } from './config.js';
 
@@ -233,7 +251,7 @@ const DIFFICULTY_ORDER = ["A1", "A2", "B1", "B2", "C1", "C2"];
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            user_id: DEMO_USER_ID,
+            user_id: userId,
             mode: "speaking",
             transcript: "This is a placeholder transcript"  // Replace with real transcript later
   })
@@ -255,7 +273,7 @@ const DIFFICULTY_ORDER = ["A1", "A2", "B1", "B2", "C1", "C2"];
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              user_id: DEMO_USER_ID,
+              user_id: userId,
               mode: "writing",
               transcript: input
             })
@@ -298,7 +316,7 @@ const DIFFICULTY_ORDER = ["A1", "A2", "B1", "B2", "C1", "C2"];
       document.getElementById("result").classList.add("d-none"); // Hide the current question's result message
 
       // Call the new showSummary function to populate and display the summary card
-      await showSummary(DEMO_USER_ID); 
+      await showSummary(userId);
     }
 
     // Function to toggle rubric visibility

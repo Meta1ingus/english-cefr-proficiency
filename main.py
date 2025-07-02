@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, HTTPException, Body
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,6 +11,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 # Internal imports
 from tools.db_utils import (
+    db_connection,
     get_all_questions,
     get_all_passages,
     get_all_rubrics,
@@ -20,6 +21,7 @@ from tools.db_utils import (
     get_user_summary,
     score_transcript_by_rubric
 )
+
 from utils.scoring import score_transcript
 from utils.transcriber import transcribe_with_huggingface
 
@@ -32,6 +34,26 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.post("/register_user")
+def register_user(data: dict = Body(...)):
+    name = data.get("name", "").strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="Name is required")
+
+    with db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT id FROM users WHERE name = %s", (name,))
+        result = cursor.fetchone()
+
+        if result:
+            user_id = result[0]
+        else:
+            cursor.execute("INSERT INTO users (name) VALUES (%s) RETURNING id", (name,))
+            user_id = cursor.fetchone()[0]
+            conn.commit()
+
+    return {"user_id": user_id}
 
 # Serve static audio files
 app.mount("/audio", StaticFiles(directory=os.path.join("public", "audio")), name="audio")
@@ -159,7 +181,7 @@ def get_responses(user_id: int = Query(..., description="User ID to retrieve res
 
 
 @app.get("/summary")
-def get_summary(user_id: str = Query(..., description="User ID to generate performance summary for")):
+def get_summary(user_id: int = Query(..., description="User ID to generate performance summary for")):
     try:
         return JSONResponse(content=get_user_summary(user_id))
     except Exception as e:
