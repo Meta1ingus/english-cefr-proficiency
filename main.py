@@ -2,14 +2,13 @@ from fastapi import FastAPI, Query, HTTPException, Body
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from typing import Optional
 import os
 import sys
 
-# Include current file’s directory in Python path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-# Internal imports
 from tools.db_utils import (
     get_connection,
     get_all_questions,
@@ -22,7 +21,6 @@ from tools.db_utils import (
     score_transcript_by_rubric
 )
 
-from utils.scoring import score_transcript
 from utils.transcriber import transcribe_with_huggingface
 
 app = FastAPI()
@@ -59,13 +57,11 @@ def register_user(data: dict = Body(...)):
 
     return {"user_id": user_id}
 
-# Serve static audio files
 app.mount("/audio", StaticFiles(directory=os.path.join("public", "audio")), name="audio")
 
 @app.get("/")
 def read_root():
     return {"message": "English CEFR Proficiency API is running."}
-
 
 @app.get("/questions")
 def get_questions():
@@ -74,14 +70,12 @@ def get_questions():
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 
-
 @app.get("/passages")
 def get_passages():
     try:
         return JSONResponse(content=get_all_passages())
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
-
 
 @app.get("/rubrics")
 def get_rubrics():
@@ -90,19 +84,21 @@ def get_rubrics():
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 
-
 class EvaluationRequest(BaseModel):
-    user_id: int
+    user_id: int = Field(..., alias="userId")
     question_id: int
-    response_text: str  # For writing: actual text | For speaking: path to .mp3/.wav
-    mode: str           # Either "writing" or "speaking"
+    mode: str  # "writing", "speaking", or "multiple-choice"
+    response_text: Optional[str] = None
+    choice_id: Optional[int] = None
 
+    class Config:
+        allow_population_by_field_name = True
 
 @app.post("/evaluate")
 async def evaluate_response(data: EvaluationRequest):
     try:
         rubric = get_rubric_by_question_id(data.question_id)
-        if not rubric:
+        if not rubric and data.mode != "multiple-choice":
             return JSONResponse(status_code=404, content={"error": "Rubric not found."})
 
         transcript = None
@@ -110,27 +106,33 @@ async def evaluate_response(data: EvaluationRequest):
         score = None
         criteria_scores = {}
 
-        # --- Mode: Writing ---
         if data.mode == "writing":
-            transcript = data.response_text.strip()
+            if not data.response_text or not isinstance(data.response_text, str):
+                return JSONResponse(status_code=400, content={"error": "Missing or invalid response text for writing task."})
 
+            transcript = data.response_text.strip()
             if len(transcript.split()) < 5:
                 return JSONResponse(status_code=400, content={"error": "Text too short to evaluate."})
 
-            rubric_id = rubric["rubric_id"] if isinstance(rubric, dict) else rubric.rubric_id
+            rubric_id = None
+            if rubric:
+                rubric_id = rubric["rubric_id"] if isinstance(rubric, dict) else getattr(rubric, "rubric_id", None)
+
+            if rubric_id is None:
+                return JSONResponse(status_code=400, content={"error": "Rubric ID not found for this writing task."})
+
             score, criteria_scores = score_transcript_by_rubric(transcript, rubric_id)
             feedback = f"Writing scored using rubric: {len(criteria_scores)} criteria. Avg: {score}/5"
 
-
-        # --- Mode: Speaking ---
         elif data.mode == "speaking":
             audio_path = data.response_text
+            if not audio_path or not isinstance(audio_path, str):
+                return JSONResponse(status_code=400, content={"error": "Missing or invalid audio path for speaking task."})
 
             if not (audio_path.endswith(".mp3") or audio_path.endswith(".wav")):
-                return JSONResponse(status_code=400, content={"error": "Invalid audio format. Use .mp3 or .wav"})
+                return JSONResponse(status_code=400, content={"error": "Audio file must be .mp3 or .wav"})
 
             try:
-                # Returns transcript + optional metadata
                 transcript_obj = transcribe_with_huggingface(audio_path)
                 if isinstance(transcript_obj, dict):
                     transcript = transcript_obj.get("text", "")
@@ -142,7 +144,13 @@ async def evaluate_response(data: EvaluationRequest):
                 if len(transcript.split()) < 4:
                     return JSONResponse(status_code=400, content={"error": "Speech too short to evaluate."})
 
-                rubric_id = rubric["rubric_id"] if isinstance(rubric, dict) else rubric.rubric_id
+                rubric_id = None
+                if rubric:
+                    rubric_id = rubric["rubric_id"] if isinstance(rubric, dict) else getattr(rubric, "rubric_id", None)
+
+                if rubric_id is None:
+                    return JSONResponse(status_code=400, content={"error": "Rubric ID not found for this speaking task."})
+
                 score, criteria_scores = score_transcript_by_rubric(transcript, rubric_id)
                 feedback = (
                     f"Speech scored using rubric: {len(criteria_scores)} criteria. "
@@ -152,8 +160,33 @@ async def evaluate_response(data: EvaluationRequest):
             except Exception as e:
                 return JSONResponse(status_code=500, content={"error": f"Transcription failed: {str(e)}"})
 
+        elif data.mode == "multiple-choice":
+            if data.choice_id is None:
+                return JSONResponse(status_code=400, content={"error": "Missing choice ID for multiple-choice task."})
+
+            try:
+                with get_connection() as conn:
+                    cursor = conn.cursor()
+                    cursor.execute("""
+                        SELECT id FROM choices
+                        WHERE question_id = %s AND is_correct = TRUE
+                    """, (data.question_id,))
+                    result = cursor.fetchone()
+
+                    if not result:
+                        return JSONResponse(status_code=404, content={"error": "Correct choice not found."})
+
+                    correct_choice_id = result[0]
+                    is_correct = (data.choice_id == correct_choice_id)
+                    score = 1 if is_correct else 0
+                    feedback = "✅ Correct!" if is_correct else "❌ Incorrect."
+                    transcript = str(data.choice_id)
+
+            except Exception as e:
+                return JSONResponse(status_code=500, content={"error": f"Choice evaluation failed: {str(e)}"})
+
         else:
-            return JSONResponse(status_code=400, content={"error": "Unsupported mode. Use 'writing' or 'speaking'."})
+            return JSONResponse(status_code=400, content={"error": "Unsupported mode. Use 'writing', 'speaking', or 'multiple-choice'."})
 
         log_response(
             user_id=data.user_id,
@@ -182,7 +215,6 @@ def get_responses(user_id: int = Query(..., description="User ID to retrieve res
         return JSONResponse(content=get_user_responses(user_id))
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
-
 
 @app.get("/summary")
 def get_summary(user_id: int = Query(..., description="User ID to generate performance summary for")):

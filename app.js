@@ -210,17 +210,17 @@ if (q.answerType === "open-ended") {
 // ✅ Unconditional rendering of choices (if present)
 if (q.choices?.length) {
   q.choices.forEach((choice, i) => {
-    const id = `choice${i}`;
-    const label = choice.label ?? String.fromCharCode(65 + i);
-    const text = choice.text || choice.choice_text || choice.answer || choice.value || "";
+  const id = `choice${i}`;
+  const text = choice.choice_text ?? "[No text]";
+  const value = choice.id;
 
-    form.innerHTML += `
-      <div class="form-check">
-        <input class="form-check-input" type="radio" name="choice" id="${id}" value="${text}">
-        <label class="form-check-label" for="${id}">${label}. ${text}</label>
-      </div>
-    `;
-  });
+  form.innerHTML += `
+    <div class="form-check">
+      <input class="form-check-input" type="radio" name="choice" id="${id}" value="${value}">
+      <label class="form-check-label" for="${id}">${text}</label>
+    </div>
+  `;
+});
 } else if (q.choices) {
   // Only warn if `q.choices` is defined but empty
   form.innerHTML += `<p class="text-danger">⚠️ No choices available for this question.</p>`;
@@ -361,28 +361,49 @@ await fetch(`${API_BASE_URL}/evaluate`, {
           return; // Prevent proceeding if word count not met
         }
       } else { // Multiple choice
-        const selected = document.querySelector("input[name='choice']:checked");
-if (!selected) {
-  result.classList.add("alert-warning");
-  result.textContent = "Please select an answer.";
-  return;
+  const selected = document.querySelector("input[name='choice']:checked");
+  if (!selected) {
+    result.classList.add("alert-warning");
+    result.textContent = "Please select an answer.";
+    return;
+  }
+
+  const payload = {
+    userId,
+    question_id: currentQuestion.id,
+    mode: "multiple-choice",
+    choice_id: parseInt(selected.value)
+  };
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/evaluate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await response.json();
+    console.log("✅ Multiple-choice evaluation:", data);
+
+    const isCorrect = data.score === 1;
+
+    result.classList.add(isCorrect ? "alert-success" : "alert-danger");
+    result.textContent = data.feedback ?? (isCorrect ? "Correct!" : "Incorrect.");
+
+    reviewLog.push({
+      question: currentQuestion.questionText,
+      userAnswer: selected.value,
+      correctAnswer: data.transcript, // stores choice_id as string
+      correct: isCorrect
+    });
+
+    if (isCorrect) score++;
+  } catch (error) {
+    console.error("❌ Evaluation error:", error);
+    result.classList.add("alert-warning");
+    result.textContent = "Evaluation failed. Please try again.";
+  }
 }
-
-if (!currentQuestion.correctAnswer) {
-  console.warn("⚠️ Missing correctAnswer for:", currentQuestion.id, currentQuestion.questionText);
-}
-
-const normalize = (str) => str.trim().toLowerCase();
-const isCorrect = normalize(selected.value) === normalize(currentQuestion.correctAnswer);
-
-        reviewLog.push({
-          question: currentQuestion.questionText,
-          userAnswer: selected.value,
-          correctAnswer: currentQuestion.correctAnswer,
-          correct: isCorrect
-});
-        if (isCorrect) score++;
-      }
 
       // Show next button, hide submit button
       document.getElementById("submitBtn").classList.add("d-none");
