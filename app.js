@@ -230,6 +230,40 @@ if (q.choices?.length) {
 document.getElementById("submitBtn").classList.remove("d-none");
 document.getElementById("nextBtn").classList.add("d-none");
 
+function setupSpeakingRecording(q) {
+  const recordBtn = document.getElementById("recordBtn");
+  const status = document.getElementById("recordingStatus");
+  const playback = document.getElementById("playback");
+
+  let mediaRecorder;
+  let chunks = [];
+
+  recordBtn.onclick = async () => {
+    if (!mediaRecorder || mediaRecorder.state === "inactive") {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(stream);
+      chunks = [];
+
+      mediaRecorder.ondataavailable = e => chunks.push(e.data);
+
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(chunks, { type: "audio/webm" });
+        window.latestRecordingBlob = blob;
+        const audioURL = URL.createObjectURL(blob);
+        playback.src = audioURL;
+        playback.classList.remove("d-none");
+        status.textContent = "Recording complete. Ready to play.";
+      };
+
+      mediaRecorder.start();
+      status.textContent = "Recording...";
+      recordBtn.textContent = "🛑 Stop Recording";
+    } else {
+      mediaRecorder.stop();
+      recordBtn.textContent = "🎙️ Start Recording";
+    }
+  };
+}
 
     // Check the user's answer and update score
     async function checkAnswer() {
