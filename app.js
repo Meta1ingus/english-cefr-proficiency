@@ -23,11 +23,14 @@ document.getElementById("startBtn").addEventListener("click", async () => {
     const data = await res.json();
     userId = data.user_id;
 
+    // 👇 Load all questions/passages/rubrics before starting the quiz
+    await loadQuestions();
+
     // Hide name form and show quiz
     document.getElementById("namePrompt").classList.add("d-none");
     document.getElementById("quizCard").classList.remove("d-none");
 
-    // Kick off the first question
+    // Start first question
     loadQuestion();
   } catch (err) {
     console.error("Registration error:", err);
@@ -448,7 +451,10 @@ let passageMap = {}, rubrics = {};
         document.getElementById("result").textContent = "❌ Failed to generate PDF. Please try again.";
       });
     }
-
+    
+    window.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("nameInput").focus();
+});
 
     // Event Listeners
     document.getElementById("submitBtn").addEventListener("click", checkAnswer);
@@ -467,6 +473,3 @@ let passageMap = {}, rubrics = {};
 
     // Event listener for the new PDF download button
     document.getElementById("downloadPdfBtn").addEventListener("click", generatePdfSummary);
-
-    // Initial load of questions when the page loads
-    loadQuestions();
