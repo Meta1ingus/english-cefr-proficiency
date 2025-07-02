@@ -142,7 +142,7 @@ def get_user_responses(user_id: int):
 
     return results
 
-def get_user_summary(user_id: str):
+def get_user_summary(user_id: int):
     conn = get_connection()
     cursor = conn.cursor()
 
