@@ -1,29 +1,46 @@
+// ⬆️ Import comes first
+import { API_BASE_URL } from './config.js';
+
+// ✅ Then set up userId and registration
 let userId = null;
 
-async function getOrCreateUserId() {
-  let name = "";
+document.getElementById("startBtn").addEventListener("click", async () => {
+  const nameInput = document.getElementById("nameInput");
+  const name = nameInput.value.trim();
 
-  while (!name) {
-    name = prompt("Please enter your name to begin the test:");
-    if (name === null) return; // user cancelled
-    name = name.trim();
+  if (!name) {
+    alert("Please enter your name to begin.");
+    return;
   }
 
-  const response = await fetch("/register_user", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name })
-  });
+  try {
+    const res = await fetch(`${API_BASE_URL}/register_user`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name })
+    });
 
-  const data = await response.json();
-  userId = data.user_id;
-  localStorage.setItem("userId", userId);
-}
+    const data = await res.json();
+    userId = data.user_id;
 
+    // Hide name form and show quiz
+    document.getElementById("namePrompt").classList.add("d-none");
+    document.getElementById("quizCard").classList.remove("d-none");
+
+    // Kick off the first question
+    loadQuestion();
+  } catch (err) {
+    console.error("Registration error:", err);
+    alert("Something went wrong — please try again.");
+  }
+});
+
+// 👇 Continue with question/game variables
 const DIFFICULTY_ORDER = ["A1", "A2", "B1", "B2", "C1", "C2"];
-    let questions = [], usedQuestions = [], currentQuestion = {}, currentDifficultyIndex = 0;
-    let score = 0, questionCount = 0, maxQuestions = 60; // Max questions is fixed
-    let passageMap = {}, rubrics = {};
+let questions = [], usedQuestions = [], currentQuestion = {}, currentDifficultyIndex = 0;
+let score = 0, questionCount = 0, maxQuestions = 60;
+let passageMap = {}, rubrics = {};
+
 
     import { API_BASE_URL } from './config.js';
 

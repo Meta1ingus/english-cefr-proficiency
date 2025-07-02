@@ -11,7 +11,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 # Internal imports
 from tools.db_utils import (
-    db_connection,
+    get_connection,
     get_all_questions,
     get_all_passages,
     get_all_rubrics,
@@ -41,7 +41,7 @@ def register_user(data: dict = Body(...)):
     if not name:
         raise HTTPException(status_code=400, detail="Name is required")
 
-    with db_connection() as conn:
+    with get_connection() as conn:
         cursor = conn.cursor()
         cursor.execute("SELECT id FROM users WHERE name = %s", (name,))
         result = cursor.fetchone()
@@ -50,8 +50,12 @@ def register_user(data: dict = Body(...)):
             user_id = result[0]
         else:
             cursor.execute("INSERT INTO users (name) VALUES (%s) RETURNING id", (name,))
-            user_id = cursor.fetchone()[0]
-            conn.commit()
+            result = cursor.fetchone()
+            if result is None:
+                raise HTTPException(status_code=500, detail="Failed to retrieve user ID after insertion")
+
+        user_id = result[0]
+        conn.commit()
 
     return {"user_id": user_id}
 
