@@ -40,10 +40,7 @@ document.getElementById("startBtn").addEventListener("click", async () => {
 
 // 👇 Continue with question/game variables
 const DIFFICULTY_ORDER = ["A1", "A2", "B1", "B2", "C1", "C2"];
-return questions.filter(q =>
-  q.difficulty === level &&
-  (allowRepeats || !usedQuestions.includes(q.id))
-);
+
 let questions = [], usedQuestions = [], currentQuestion = {}, currentDifficultyIndex = 0;
 let score = 0, questionCount = 0, maxQuestions = 60;
 let passageMap = {}, rubrics = {};
