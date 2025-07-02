@@ -212,7 +212,7 @@ if (q.choices?.length) {
   q.choices.forEach((choice, i) => {
     const id = `choice${i}`;
     const label = choice.label ?? String.fromCharCode(65 + i);
-    const text = choice.text ?? choice.choice_text ?? choice.answer ?? choice.value ?? "";
+    const text = choice.text || choice.choice_text || choice.answer || choice.value || "";
 
     form.innerHTML += `
       <div class="form-check">
