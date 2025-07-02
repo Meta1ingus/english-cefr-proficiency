@@ -311,7 +311,7 @@ result.textContent = "";
           result.classList.add("alert-success");
           result.textContent = `✅ Answer submitted! Word count: ${wordCount}`;
           console.log("📤 Evaluation payload:", {
-  user_id,
+  userId,
   mode: currentQuestion.answerType === "spoken-response" ? "speaking" : "writing",
   transcript: currentQuestion.answerType === "spoken-response"
     ? "This is a placeholder transcript"
