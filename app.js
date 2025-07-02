@@ -61,7 +61,8 @@ let reviewLog = []; // Stores answer data for summary review
         ]);
 
         questions = await questionsRes.json();
-        console.log("📦 Questions loaded:", questions);
+        console.log("📦 Loaded questions:", questions.length);
+        console.log("🔍 First few difficulties:", questions.slice(0, 3).map(q => q.difficulty));
         passageMap = await passagesRes.json();
         rubrics = await rubricsRes.json();
 
