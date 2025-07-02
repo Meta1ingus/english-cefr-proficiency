@@ -29,8 +29,8 @@ def get_all_questions():
                rubric_id, reading_id, audio
         FROM questions;
     """)
-    rows = cursor.fetchall()
-    print("Fetched rows:", rows)
+    question_rows = cursor.fetchall()
+    print("Fetched rows:", question_rows)
 
     # 2. Get choices
     cursor.execute("""
