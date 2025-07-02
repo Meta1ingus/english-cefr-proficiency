@@ -454,6 +454,9 @@ let passageMap = {}, rubrics = {};
     
     window.addEventListener("DOMContentLoaded", () => {
   document.getElementById("nameInput").focus();
+  document.getElementById("summaryCard").classList.add("d-none"); // 💥 Forces hidden
+  document.getElementById("quizCard").classList.add("d-none");    // Just in case it's visible
+  document.getElementById("result").classList.add("d-none");
 });
 
     // Event Listeners
