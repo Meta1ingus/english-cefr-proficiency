@@ -24,27 +24,30 @@ def get_all_questions():
 
     # 1. Get questions
     cursor.execute("""
-    SELECT id, question_text, category, difficulty, answer_type,
-           correct_answer, min_word_count, writing_type,
-           rubric_id, reading_id, audio
-    FROM questions;"""
-    )
-
+        SELECT id, question_text, category, difficulty, answer_type,
+               correct_answer, min_word_count, writing_type,
+               rubric_id, reading_id, audio
+        FROM questions;
+    """)
     question_rows = cursor.fetchall()
 
     # 2. Get choices
     cursor.execute("""
-        SELECT question_id, label, choice_text
-    FROM choices
+        SELECT id, question_id, label, choice_text, is_correct
+        FROM choices
         ORDER BY question_id, label;
-""")
+    """)
     choice_rows = cursor.fetchall()
 
-    # 3. Group choices by question_id and flatten to ["A. Text", "B. Text", "C. Text"]
+    # 3. Group choices by question_id into objects
     choice_map = defaultdict(list)
-    for question_id, label, choice_text in choice_rows:
-        label_text = f"{label}. {choice_text}"
-        choice_map[question_id].append(label_text)
+    for cid, qid, label, text, correct in choice_rows:
+        choice_map[qid].append({
+            "id": cid,
+            "label": label,
+            "choice_text": text,
+            "is_correct": correct
+        })
 
     cursor.close()
     conn.close()
@@ -63,7 +66,7 @@ def get_all_questions():
             "rubricId": q[8],
             "readingId": q[9],
             "audio": q[10],
-            "choices": choice_map.get(q[0], []),
+            "choices": choice_map.get(q[0], [])
         }
         for q in question_rows
     ]
