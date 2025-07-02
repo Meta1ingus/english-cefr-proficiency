@@ -131,9 +131,9 @@ if (pool.length === 0) {
 
       // Periodically increase difficulty to challenge the user
       // Example: Every 5 questions, try to move to the next difficulty band
-      if (questionCount % 5 === 0 && currentDifficultyIndex < DIFFICULTY_ORDER.length - 1) {
-        currentDifficultyIndex++;
-      }
+      // if (questionCount % 5 === 0 && currentDifficultyIndex < DIFFICULTY_ORDER.length - 1) {
+       // currentDifficultyIndex++;
+      //}
 
       renderQuestion(currentQuestion); // Display the selected question
     }
