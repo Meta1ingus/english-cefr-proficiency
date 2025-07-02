@@ -6,40 +6,47 @@
   <title>English Language Proficiency Test</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
   <style>
-    /* Custom styles for the app, ensuring responsiveness and aesthetics */
     body {
       font-family: "Inter", sans-serif;
-      background-color: #f8f9fa; /* Light background */
+      background-color: #f8f9fa;
     }
     .container {
-      max-width: 800px; /* Limit container width for better readability */
+      max-width: 800px;
     }
     .card {
-      border-radius: 1rem; /* Rounded corners for cards */
-      border: none; /* Remove default card border */
+      border-radius: 1rem;
+      border: none;
     }
     .btn {
-      border-radius: 0.5rem; /* Rounded buttons */
+      border-radius: 0.5rem;
     }
     .progress {
-      border-radius: 0.5rem; /* Rounded progress bar */
+      border-radius: 0.5rem;
       height: 24px;
     }
     .progress-bar {
-      border-radius: 0.5rem; /* Rounded progress bar fill */
-      background-color: #0d6efd; /* Bootstrap primary blue */
+      border-radius: 0.5rem;
+      background-color: #0d6efd;
     }
     #cefrBadge {
-      min-width: 150px; /* Ensure badge has consistent width */
+      min-width: 150px;
       text-align: center;
       padding: 0.5rem 1rem;
     }
     #image {
       border-radius: 0.5rem;
-      object-fit: contain; /* Ensure image fits without cropping */
+      object-fit: contain;
     }
     audio {
-      width: 100%; /* Make audio player responsive */
+      width: 100%;
+    }
+    /* 🔴 Highlight incorrect answers in review */
+    .list-group-item.incorrect {
+      background-color: #fff3f3;
+      border-left: 5px solid #dc3545;
+    }
+    .list-group-item.correct {
+      border-left: 5px solid #198754;
     }
   </style>
 </head>
@@ -48,25 +55,27 @@
     <!-- 🎓 Main Quiz Card -->
     <h1 class="mb-4 text-center">🎓 English Language Proficiency Test</h1>
     <p class="text-center text-muted mb-4">Assess your English skills with this comprehensive test.</p>
-    <!-- 🔐 Username Input Block -->
-<div id="namePrompt" class="card p-4 mb-4 shadow-sm">
-  <label for="nameInput" class="form-label">Enter your name to begin:</label>
-  <input type="text" id="nameInput" class="form-control mb-2" placeholder="Your name..." required />
-  <button id="startBtn" class="btn btn-primary">Start Test</button>
-</div>
 
+    <!-- 🔐 Username Input Block -->
+    <div id="namePrompt" class="card p-4 mb-4 shadow-sm">
+      <label for="nameInput" class="form-label">Enter your name to begin:</label>
+      <input type="text" id="nameInput" class="form-control mb-2" placeholder="Your name..." required />
+      <button id="startBtn" class="btn btn-primary">Start Test</button>
+    </div>
+
+    <!-- 🧪 Quiz Card -->
     <div id="quizCard" class="card p-4 shadow-sm d-none">
       <div id="progressText" class="text-muted mb-2">Question 1 of 60</div>
       <h5 id="questionText" class="mb-3"></h5>
       <div id="metaInfo" class="mb-2 text-secondary"></div>
 
-      <!-- 🔹 Reading Passage Block -->
+      <!-- 🔹 Reading Passage -->
       <div id="readingCard" class="card mb-3 p-3 d-none bg-light border-secondary-subtle">
         <strong>Reading Passage:</strong>
         <p id="readingText" class="mb-0"></p>
       </div>
 
-      <!-- 🔹 Rubric Preview Block -->
+      <!-- 🔸 Rubric Preview -->
       <div id="rubricPanel" class="mb-3 d-none">
         <button class="btn btn-outline-secondary btn-sm" onclick="toggleRubric()">Show Rubric</button>
         <div id="rubricContent" class="mt-2 text-secondary small d-none"></div>
@@ -80,13 +89,14 @@
       <button id="nextBtn" class="btn btn-success d-none">Next Question</button>
     </div>
 
+    <!-- 📝 Feedback Display -->
     <div id="result" class="mt-4 alert alert-info d-none"></div>
 
-    <!-- 📊 Enhanced Summary Card -->
+    <!-- 📊 Performance Summary -->
     <div id="summaryCard" class="card p-4 mt-4 shadow-sm d-none">
       <div id="watermark" class="position-absolute text-muted" style="opacity: 0.15; font-size: 3rem; transform: rotate(-30deg); top: 30%; left: 10%;">
-  <span id="watermarkText">Proficiency Summary</span>
-</div>
+        <span id="watermarkText">Proficiency Summary</span>
+      </div>
       <h4 class="mb-3">📊 Performance Summary</h4>
 
       <!-- 🏅 CEFR Badge -->
@@ -98,15 +108,15 @@
         <div class="progress" style="height: 24px;">
           <div id="scoreBar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="5">0 / 5</div>
         </div>
-
-        <div id="reviewSection" class="mt-4 d-none">
-  <h5>📝 Answer Review</h5>
-  <ul id="reviewList" class="list-group"></ul>
-</div>
-
       </div>
 
-      <!-- 🧾 Details -->
+      <!-- 📝 Answer Review -->
+      <div id="reviewSection" class="mt-4 d-none">
+        <h5>📝 Answer Review</h5>
+        <ul id="reviewList" class="list-group"></ul>
+      </div>
+
+      <!-- 📋 Summary Stats -->
       <ul class="list-group list-group-flush mb-3">
         <li class="list-group-item">Total submissions: <strong id="totalSubmissions"></strong></li>
         <li class="list-group-item">Average score: <strong id="averageScore"></strong></li>
@@ -115,24 +125,25 @@
         <li class="list-group-item text-muted">Last updated: <span id="lastUpdated"></span></li>
       </ul>
 
-      <!-- 💬 Motivational Message -->
+      <!-- 💬 Encouragement -->
       <div id="encouragement" class="alert alert-info mb-3">
         Keep practicing—you're building toward confident communication!
       </div>
 
-      <!-- 🔁 Action -->
-      <div class="d-flex justify-content-center gap-2"> <!-- Added a flex container for buttons -->
+      <!-- 🔁 Test Actions -->
+      <div class="d-flex justify-content-center gap-2">
         <button id="restartBtn" class="btn btn-outline-primary">Restart Test</button>
         <button class="btn btn-outline-secondary" onclick="location.reload()">Try Another Test</button>
-        <button id="downloadPdfBtn" class="btn btn-primary">Download PDF Summary</button> <!-- New button for PDF download -->
+        <button id="downloadPdfBtn" class="btn btn-primary">Download PDF Summary</button>
       </div>
     </div>
   </div>
 
-  <!-- PDF Generation Libraries -->
+  <!-- PDF Generation -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
+  <!-- Core Logic -->
   <script type="module" src="app.js"></script>
 </body>
 </html>

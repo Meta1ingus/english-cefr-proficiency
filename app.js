@@ -391,11 +391,12 @@ await fetch(`${API_BASE_URL}/evaluate`, {
     result.textContent = data.feedback ?? (isCorrect ? "Correct!" : "Incorrect.");
 
     reviewLog.push({
-      question: currentQuestion.questionText,
-      userAnswer: selected.value,
-      correctAnswer: data.transcript, // stores choice_id as string
-      correct: isCorrect
-    });
+  question: currentQuestion.questionText,
+  userAnswer: data.transcript, // this is the full text now
+  correctAnswer: currentQuestion.correct_answer, // if available in frontend
+  correct: isCorrect
+});
+
 
     if (isCorrect) score++;
   } catch (error) {
