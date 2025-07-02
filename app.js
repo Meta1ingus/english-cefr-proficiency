@@ -483,19 +483,19 @@ await fetch(`${API_BASE_URL}/evaluate`, {
         
         reviewLog.forEach((entry, i) => {
           const li = document.createElement("li");
-          li.className = `list-group-item ${entry.correct === true
-            ? "list-group-item-success"
-            : entry.correct === false
-            ? "list-group-item-danger"
-            : "list-group-item-secondary"}`;
-            
+li.className = "list-group-item";
+
+// ✅ Apply the visual class AFTER setting innerHTML
 li.innerHTML = `
-<strong>Q${i + 1}:</strong> ${entry.question}<br>
-<strong>Your Answer:</strong> ${entry.userAnswer}<br>
-${entry.correctAnswer ? `<strong>Correct Answer:</strong> ${entry.correctAnswer}` : ""}
+  <strong>Q:</strong> ${entry.question}<br/>
+  <strong>Your Answer:</strong> ${entry.userAnswer} ${entry.correct ? "✅" : "❌"}<br/>
+  <strong>Correct Answer:</strong> ${entry.correctAnswer}
 `;
 
-  reviewList.appendChild(li);
+li.classList.add(entry.correct ? "correct" : "incorrect");
+
+// ✅ Now add it to the review list
+reviewList.appendChild(li);
 });
 
 document.getElementById("reviewSection").classList.remove("d-none");
