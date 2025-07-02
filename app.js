@@ -122,6 +122,11 @@ if (pool.length === 0) {
   return showFinalResults();
 }
 
+// 🧼 Clear lingering result messages
+const result = document.getElementById("result");
+result.classList.add("d-none", "alert-info", "alert-success", "alert-danger", "alert-warning", "alert-secondary");
+result.textContent = "";
+
       currentQuestion = pickRandom(pool);
       if (!currentQuestion) {
         // Fallback if pickRandom somehow returns null (shouldn't happen with the pool.length check)
@@ -198,19 +203,19 @@ if (pool.length === 0) {
           <textarea id="writtenAnswer" class="form-control" rows="5" placeholder="Write at least ${q.minWordCount || 0} words..."></textarea>
         `;
       } else { // Default to multiple choice
-        q.choices.forEach((choice, i) => {
-          const id = `choice${i}`;
-          const letter = String.fromCharCode(65 + i); // A, B, C...
-        
-          form.innerHTML += `
-    <div class="form-check">
-      <input class="form-check-input" type="radio" name="choice" id="${id}" value="${choice}">
-      <label class="form-check-label" for="${id}">${letter}. ${choice}</label>
-    </div>
-  `;
-});
+  q.choices.forEach((choice, i) => {
+    const id = `choice${i}`;
+    const label = choice.label ?? String.fromCharCode(65 + i);
+    const text = choice.text ?? "";
 
-      }
+    form.innerHTML += `
+      <div class="form-check">
+        <input class="form-check-input" type="radio" name="choice" id="${id}" value="${text}">
+        <label class="form-check-label" for="${id}">${label}. ${text}</label>
+      </div>
+    `;
+  }); // ← this closing paren + semicolon was missing
+}
 
       // Reset button visibility for new question
       document.getElementById("submitBtn").classList.remove("d-none");
