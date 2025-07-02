@@ -345,9 +345,10 @@ await fetch(`${API_BASE_URL}/evaluate`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              user_id: userId,
+              userId: userId,
+              question_id: currentQuestion.id,
               mode: "writing",
-              transcript: input
+              response_text: input
             })
           })
 .then(res => res.json())
