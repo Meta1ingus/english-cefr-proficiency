@@ -41,9 +41,6 @@ let questions = [], usedQuestions = [], currentQuestion = {}, currentDifficultyI
 let score = 0, questionCount = 0, maxQuestions = 60;
 let passageMap = {}, rubrics = {};
 
-
-    import { API_BASE_URL } from './config.js';
-
     // Function to load questions, passages, and rubrics from local endpoints
     async function loadQuestions() {
       try {
