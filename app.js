@@ -84,11 +84,13 @@ console.log("📊 Difficulty distribution:", difficultyCounts);
     }
 
     // Determine the pool of available questions for the current difficulty level
-    function getCurrentPool() {
-      const level = DIFFICULTY_ORDER[currentDifficultyIndex];
-      // Filter out questions already used by checking their IDs
-      return questions.filter(q => q.difficulty === level && !usedQuestions.includes(q.id));
-    }
+    function getCurrentPool(allowRepeats = false) {
+  const level = DIFFICULTY_ORDER[currentDifficultyIndex];
+  return questions.filter(q =>
+    q.difficulty === level &&
+    (allowRepeats || !usedQuestions.includes(q.id))
+  );
+}
 
     // Pick a random question from a given pool
     function pickRandom(pool) {
@@ -128,12 +130,6 @@ if (pool.length === 0) {
 
       usedQuestions.push(currentQuestion.id); // Mark question as used
       questionCount++; // Increment overall question count
-
-      // Periodically increase difficulty to challenge the user
-      // Example: Every 5 questions, try to move to the next difficulty band
-      // if (questionCount % 5 === 0 && currentDifficultyIndex < DIFFICULTY_ORDER.length - 1) {
-       // currentDifficultyIndex++;
-      //}
 
       renderQuestion(currentQuestion); // Display the selected question
     }
