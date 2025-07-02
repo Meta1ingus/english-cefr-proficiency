@@ -62,6 +62,11 @@ let reviewLog = []; // Stores answer data for summary review
         ]);
 
         questions = await questionsRes.json();
+        const difficultyCounts = DIFFICULTY_ORDER.map(level => ({
+          level,
+          count: questions.filter(q => q.difficulty === level).length
+}));
+console.log("📊 Difficulty distribution:", difficultyCounts);
         console.log("📦 Loaded questions:", questions.length);
         console.log("🔍 First few difficulties:", questions.slice(0, 3).map(q => q.difficulty));
         passageMap = await passagesRes.json();
