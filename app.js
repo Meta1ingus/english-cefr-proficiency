@@ -192,13 +192,16 @@ let passageMap = {}, rubrics = {};
       } else { // Default to multiple choice
         q.choices.forEach((choice, i) => {
           const id = `choice${i}`;
+          const letter = String.fromCharCode(65 + i); // A, B, C...
+        
           form.innerHTML += `
-            <div class="form-check">
-              <input class="form-check-input" type="radio" name="choice" id="${id}" value="${choice}">
-              <label class="form-check-label" for="${id}">${choice}</label>
-            </div>
-          `;
-        });
+    <div class="form-check">
+      <input class="form-check-input" type="radio" name="choice" id="${id}" value="${choice}">
+      <label class="form-check-label" for="${id}">${letter}. ${choice}</label>
+    </div>
+  `;
+});
+
       }
 
       // Reset button visibility for new question
@@ -262,8 +265,9 @@ let passageMap = {}, rubrics = {};
           result.textContent = "Please record your response before submitting.";
           return;
         }
-        result.classList.add("alert-success");
-        result.textContent = "✅ Response recorded! (Review not available in this demo)";
+        result.classList.add("alert-secondary");
+        result.textContent = "🎙️ Response submitted.";
+        
         fetch(`${API_BASE_URL}/evaluate`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -278,6 +282,13 @@ let passageMap = {}, rubrics = {};
 .catch(err => console.error("❌ Speaking evaluation error:", err));
 
         score++; // Score is incremented, but actual assessment would be done by AI/human
+        reviewLog.push({
+          question: currentQuestion.questionText,
+          userAnswer: "Spoken response submitted",
+          correctAnswer: "Evaluated after submission",
+          correct: null
+});
+
       } else if (currentQuestion.answerType === "open-ended") {
         const input = document.getElementById("writtenAnswer").value.trim();
         const wordCount = input.split(/\s+/).filter(Boolean).length; // Count non-empty words
@@ -315,10 +326,12 @@ let passageMap = {}, rubrics = {};
 
         const normalize = (str) => str.trim().toLowerCase();
         const isCorrect = normalize(selected.value) === normalize(currentQuestion.correctAnswer);
-        result.classList.add(isCorrect ? "alert-success" : "alert-danger");
-        result.textContent = isCorrect
-          ? "✅ Correct!"
-          : `❌ Incorrect. Correct answer: ${currentQuestion.correctAnswer}`;
+        reviewLog.push({
+          question: currentQuestion.questionText,
+          userAnswer: selected.value,
+          correctAnswer: currentQuestion.correctAnswer,
+          correct: isCorrect
+});
         if (isCorrect) score++;
       }
 
@@ -394,6 +407,28 @@ let passageMap = {}, rubrics = {};
         else line = "Let’s build from the basics. Every response is progress! 💪";
 
         message.textContent = line;
+        const reviewList = document.getElementById("reviewList");
+        reviewList.innerHTML = "";
+        
+        reviewLog.forEach((entry, i) => {
+          const li = document.createElement("li");
+          li.className = `list-group-item ${entry.correct === true
+            ? "list-group-item-success"
+            : entry.correct === false
+            ? "list-group-item-danger"
+            : "list-group-item-secondary"}`;
+            
+li.innerHTML = `
+<strong>Q${i + 1}:</strong> ${entry.question}<br>
+<strong>Your Answer:</strong> ${entry.userAnswer}<br>
+${entry.correctAnswer ? `<strong>Correct Answer:</strong> ${entry.correctAnswer}` : ""}
+`;
+
+  reviewList.appendChild(li);
+});
+
+document.getElementById("reviewSection").classList.remove("d-none");
+
         document.getElementById("summaryCard").classList.remove("d-none"); // Show the summary card
       } catch (error) {
         console.error("Summary fetch failed:", error);
@@ -409,6 +444,17 @@ let passageMap = {}, rubrics = {};
     // Function to generate and download a PDF summary
     async function generatePdfSummary() {
       const summaryCard = document.getElementById('summaryCard');
+
+      const name = document.getElementById("nameInput")?.value.trim() || "Student";
+      const today = new Date().toISOString().split("T")[0]; // Format: YYYY-MM-DD
+      const filename = `CEFR_Review_${name}_${today}.pdf`;
+      document.getElementById("watermarkText").textContent = `${name} • ${today}`;
+
+      // Show review section during PDF export    
+      const reviewSection = document.getElementById("reviewSection");
+      const wasHidden = reviewSection.classList.contains("d-none");
+      if (wasHidden) reviewSection.classList.remove("d-none");
+
       // Temporarily hide buttons that shouldn't be in the PDF
       const buttonsDiv = summaryCard.querySelector('.d-flex.justify-content-center.gap-2');
       if (buttonsDiv) {
@@ -437,7 +483,9 @@ let passageMap = {}, rubrics = {};
           heightLeft -= pageHeight;
         }
 
-        pdf.save('English_Proficiency_Summary.pdf'); // Save the PDF
+        pdf.save(filename); // Save the PDF
+
+        if (wasHidden) reviewSection.classList.add("d-none");
 
         // Restore button visibility after PDF generation
         if (buttonsDiv) {

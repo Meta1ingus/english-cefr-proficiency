@@ -45,15 +45,15 @@
 </head>
 <body class="bg-light">
   <div class="container py-4">
+    <!-- 🎓 Main Quiz Card -->
+    <h1 class="mb-4 text-center">🎓 English Language Proficiency Test</h1>
+    <p class="text-center text-muted mb-4">Assess your English skills with this comprehensive test.</p>
     <!-- 🔐 Username Input Block -->
 <div id="namePrompt" class="card p-4 mb-4 shadow-sm">
   <label for="nameInput" class="form-label">Enter your name to begin:</label>
   <input type="text" id="nameInput" class="form-control mb-2" placeholder="Your name..." required />
   <button id="startBtn" class="btn btn-primary">Start Test</button>
 </div>
-
-    <!-- 🎓 Main Quiz Card -->
-    <h1 class="mb-4 text-center">🎓 English Language Proficiency Test</h1>
 
     <div id="quizCard" class="card p-4 shadow-sm d-none">
       <div id="progressText" class="text-muted mb-2">Question 1 of 60</div>
@@ -84,6 +84,9 @@
 
     <!-- 📊 Enhanced Summary Card -->
     <div id="summaryCard" class="card p-4 mt-4 shadow-sm d-none">
+      <div id="watermark" class="position-absolute text-muted" style="opacity: 0.15; font-size: 3rem; transform: rotate(-30deg); top: 30%; left: 10%;">
+  <span id="watermarkText">Proficiency Summary</span>
+</div>
       <h4 class="mb-3">📊 Performance Summary</h4>
 
       <!-- 🏅 CEFR Badge -->
@@ -95,6 +98,12 @@
         <div class="progress" style="height: 24px;">
           <div id="scoreBar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="5">0 / 5</div>
         </div>
+
+        <div id="reviewSection" class="mt-4 d-none">
+  <h5>📝 Answer Review</h5>
+  <ul id="reviewList" class="list-group"></ul>
+</div>
+
       </div>
 
       <!-- 🧾 Details -->
