@@ -114,10 +114,7 @@ async def evaluate_response(data: EvaluationRequest):
             if len(transcript.split()) < 5:
                 return JSONResponse(status_code=400, content={"error": "Text too short to evaluate."})
 
-            rubric_id = None
-            if rubric:
-                rubric_id = rubric["rubric_id"] if isinstance(rubric, dict) else getattr(rubric, "rubric_id", None)
-
+            rubric_id = rubric["rubric_id"] if isinstance(rubric, dict) else getattr(rubric, "rubric_id", None)
             if rubric_id is None:
                 return JSONResponse(status_code=400, content={"error": "Rubric ID not found for this writing task."})
 
@@ -132,58 +129,52 @@ async def evaluate_response(data: EvaluationRequest):
             if not (audio_path.endswith(".mp3") or audio_path.endswith(".wav")):
                 return JSONResponse(status_code=400, content={"error": "Audio file must be .mp3 or .wav"})
 
-            try:
-                transcript_obj = transcribe_with_huggingface(audio_path)
-                if isinstance(transcript_obj, dict):
-                    transcript = transcript_obj.get("text", "")
-                    confidence = transcript_obj.get("confidence", None)
-                else:
-                    transcript = transcript_obj
-                    confidence = None
+            transcript_obj = transcribe_with_huggingface(audio_path)
+            if isinstance(transcript_obj, dict):
+                transcript = transcript_obj.get("text", "")
+                confidence = transcript_obj.get("confidence", None)
+            else:
+                transcript = transcript_obj
+                confidence = None
 
-                if len(transcript.split()) < 4:
-                    return JSONResponse(status_code=400, content={"error": "Speech too short to evaluate."})
+            if len(transcript.split()) < 4:
+                return JSONResponse(status_code=400, content={"error": "Speech too short to evaluate."})
 
-                rubric_id = None
-                if rubric:
-                    rubric_id = rubric["rubric_id"] if isinstance(rubric, dict) else getattr(rubric, "rubric_id", None)
+            rubric_id = rubric["rubric_id"] if isinstance(rubric, dict) else getattr(rubric, "rubric_id", None)
+            if rubric_id is None:
+                return JSONResponse(status_code=400, content={"error": "Rubric ID not found for this speaking task."})
 
-                if rubric_id is None:
-                    return JSONResponse(status_code=400, content={"error": "Rubric ID not found for this speaking task."})
-
-                score, criteria_scores = score_transcript_by_rubric(transcript, rubric_id)
-                feedback = (
-                    f"Speech scored using rubric: {len(criteria_scores)} criteria. "
-                    f"Avg: {score}/5. Confidence: {confidence if confidence else 'N/A'}"
-                )
-
-            except Exception as e:
-                return JSONResponse(status_code=500, content={"error": f"Transcription failed: {str(e)}"})
+            score, criteria_scores = score_transcript_by_rubric(transcript, rubric_id)
+            feedback = (
+                f"Speech scored using rubric: {len(criteria_scores)} criteria. "
+                f"Avg: {score}/5. Confidence: {confidence if confidence else 'N/A'}"
+            )
 
         elif data.mode == "multiple-choice":
             if data.choice_id is None:
                 return JSONResponse(status_code=400, content={"error": "Missing choice ID for multiple-choice task."})
 
-            try:
-                with get_connection() as conn:
-                    cursor = conn.cursor()
-                    cursor.execute("""
-                        SELECT id FROM choices
-                        WHERE question_id = %s AND is_correct = TRUE
-                    """, (data.question_id,))
-                    result = cursor.fetchone()
+            with get_connection() as conn:
+                cursor = conn.cursor()
 
-                    if not result:
-                        return JSONResponse(status_code=404, content={"error": "Correct choice not found."})
+                # Get selected choice_text
+                cursor.execute("SELECT choice_text FROM choices WHERE id = %s", (data.choice_id,))
+                result = cursor.fetchone()
+                if not result:
+                    return JSONResponse(status_code=404, content={"error": "Selected choice not found."})
+                user_choice_text = result[0]
 
-                    correct_choice_id = result[0]
-                    is_correct = (data.choice_id == correct_choice_id)
-                    score = 1 if is_correct else 0
-                    feedback = "✅ Correct!" if is_correct else "❌ Incorrect."
-                    transcript = str(data.choice_id)
+                # Get correct answer from question
+                cursor.execute("SELECT correct_answer FROM questions WHERE id = %s", (data.question_id,))
+                result = cursor.fetchone()
+                if not result:
+                    return JSONResponse(status_code=404, content={"error": "Correct answer not found."})
+                correct_text = result[0]
 
-            except Exception as e:
-                return JSONResponse(status_code=500, content={"error": f"Choice evaluation failed: {str(e)}"})
+                is_correct = user_choice_text.strip().lower() == correct_text.strip().lower()
+                score = 1 if is_correct else 0
+                feedback = "✅ Correct!" if is_correct else "❌ Incorrect."
+                transcript = user_choice_text
 
         else:
             return JSONResponse(status_code=400, content={"error": "Unsupported mode. Use 'writing', 'speaking', or 'multiple-choice'."})
