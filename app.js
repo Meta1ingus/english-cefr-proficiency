@@ -206,7 +206,7 @@ result.textContent = "";
   q.choices.forEach((choice, i) => {
     const id = `choice${i}`;
     const label = choice.label ?? String.fromCharCode(65 + i);
-    const text = choice.text ?? "";
+    const text = choice.text ?? choice.value ?? choice.answer ?? ""; // fallback for missing fields
 
     form.innerHTML += `
       <div class="form-check">
