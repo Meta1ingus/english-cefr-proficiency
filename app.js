@@ -302,16 +302,15 @@ if (!transcript || transcript === "[No transcript returned]") {
   return;
 }
 
-
 await fetch(`${API_BASE_URL}/evaluate`, {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
-    user_id: userId,
-    question_id: currentQuestion.id,
-    mode: "speaking",
-    response_text: transcript
-  })
+  userId: userId,                     // ✅ updated
+  question_id: currentQuestion.id,
+  mode: "speaking",
+  response_text: transcript
+})
 })
 .then(res => res.json())
 .then(data => console.log("🎙️ Speaking evaluation response:", data))
@@ -393,10 +392,9 @@ await fetch(`${API_BASE_URL}/evaluate`, {
     reviewLog.push({
   question: currentQuestion.questionText,
   userAnswer: data.transcript, // this is the full text now
-  correctAnswer: currentQuestion.correct_answer, // if available in frontend
+  correctAnswer: currentQuestion.correctAnswer,
   correct: isCorrect
 });
-
 
     if (isCorrect) score++;
   } catch (error) {
