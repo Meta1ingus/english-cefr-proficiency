@@ -86,9 +86,9 @@ def get_rubrics():
 
 # ✅ UPDATED model with Pydantic v2 syntax
 class EvaluationRequest(BaseModel):
-    user_id: int = Field(..., alias="userId")
-    question_id: int
-    mode: str  # "writing", "speaking", or "multiple-choice"
+    userId: int
+    questionId: int
+    mode: str
     response_text: Optional[str] = None
     choice_id: Optional[int] = None
 
@@ -100,7 +100,7 @@ class EvaluationRequest(BaseModel):
 @app.post("/evaluate")
 async def evaluate_response(data: EvaluationRequest):
     try:
-        rubric = get_rubric_by_question_id(data.question_id)
+        rubric = get_rubric_by_question_id(data.questionId)
         if not rubric and data.mode != "multiple-choice":
             return JSONResponse(status_code=404, content={"error": "Rubric not found."})
 
@@ -168,7 +168,7 @@ async def evaluate_response(data: EvaluationRequest):
                 user_choice_text = result[0]
 
                 # Get correct answer from question
-                cursor.execute("SELECT correct_answer FROM questions WHERE id = %s", (data.question_id,))
+                cursor.execute("SELECT correct_answer FROM questions WHERE id = %s", (data.questionId,))
                 result = cursor.fetchone()
                 if not result:
                     return JSONResponse(status_code=404, content={"error": "Correct answer not found."})
@@ -183,15 +183,15 @@ async def evaluate_response(data: EvaluationRequest):
             return JSONResponse(status_code=400, content={"error": "Unsupported mode. Use 'writing', 'speaking', or 'multiple-choice'."})
 
         log_response(
-            user_id=data.user_id,
-            question_id=data.question_id,
+            user_id=data.userId,
+            question_id=data.questionId,
             mode=data.mode,
             transcript=transcript,
             score=score
         )
 
         return {
-            "question_id": data.question_id,
+            "questionId": data.questionId,
             "mode": data.mode,
             "score": score,
             "max_score": 5,
