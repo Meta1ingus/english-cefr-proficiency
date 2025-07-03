@@ -24,30 +24,40 @@ def get_all_questions():
 
     # 1. Get questions
     cursor.execute("""
-        SELECT id, question_text, category, difficulty, answer_type,
-               correct_answer, min_word_count, writing_type,
-               rubric_id, reading_id, audio
-        FROM questions;
-    """)
+    SELECT 
+        id AS question_id,
+        question_text AS questionText,
+        category,
+        difficulty,
+        answer_type AS answerType,
+        correct_answer AS correctAnswer,
+        min_word_count AS minWordCount,
+        writing_type AS writingType,
+        rubric_id AS rubricId,
+        reading_id AS readingId,
+        audio
+    FROM questions;
+""")
+
     question_rows = cursor.fetchall()
     print("Fetched rows:", question_rows)
 
-    # 2. Get choices
+    # 2. Get choices — updated to remove is_correct
     cursor.execute("""
-        SELECT id, question_id, label, choice_text, is_correct
-        FROM choices
-        ORDER BY question_id, label;
-    """)
+    SELECT id, question_id, label, choice_text
+    FROM choices
+    ORDER BY question_id, label;
+""")
+
     choice_rows = cursor.fetchall()
 
-    # 3. Group choices by question_id into objects
+# 3. Group choices by question_id into objects
     choice_map = defaultdict(list)
-    for cid, qid, label, text, correct in choice_rows:
+    for cid, qid, label, text in choice_rows:
         choice_map[qid].append({
             "id": cid,
             "label": label,
-            "choice_text": text,
-            "is_correct": correct
+            "choice_text": text
         })
 
     cursor.close()
