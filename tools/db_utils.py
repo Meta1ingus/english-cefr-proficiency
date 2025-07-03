@@ -63,9 +63,15 @@ def get_all_questions():
     cursor.close()
     conn.close()
 
-    # 4. Merge everything
-    return [
-        {
+        # 4. Merge questions and choices
+    questions_list = []
+
+    for i, q in enumerate(question_rows):
+        if len(q) != 11:
+            print(f"❌ Row {i} has {len(q)} fields — expected 11 → {q}")
+            continue
+
+        questions_list.append({
             "question_id": q[0],
             "questionText": q[1],
             "category": q[2],
@@ -78,9 +84,9 @@ def get_all_questions():
             "readingId": q[9],
             "audio": q[10],
             "choices": choice_map.get(q[0], [])
-        }
-        for q in question_rows
-    ]
+        })
+
+    return questions_list
 
 def get_all_rubrics():
     conn = get_connection()
