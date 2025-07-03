@@ -266,155 +266,127 @@ function setupSpeakingRecording(q) {
 
     // Check the user's answer and update score
     async function checkAnswer() {
-      const result = document.getElementById("result");
-      result.classList.remove("d-none", "alert-info", "alert-success", "alert-danger"); // Clear previous states
+  const result = document.getElementById("result");
+  result.classList.remove("d-none", "alert-info", "alert-success", "alert-danger");
 
-      if (currentQuestion.answerType === "spoken-response") {
-        const audio = document.getElementById("playback");
-        if (!audio || !audio.src) {
-          // Use a custom message box or alert alternative instead of window.alert
-          result.classList.add("alert-warning");
-          result.textContent = "Please record your response before submitting.";
-          return;
-        }
-        result.classList.add("alert-secondary");
-        result.textContent = "🎙️ Response submitted.";
-        
-        const blob = window.latestRecordingBlob;
-if (!blob) {
-  result.classList.add("alert-danger");
-  result.textContent = "⚠️ No recording available. Please try again.";
-  return;
-}
-
-const formData = new FormData();
-formData.append("file", blob, "spoken-response.webm");
-
-const transcriptRes = await fetch(`${API_BASE_URL}/transcribe`, {
-  method: "POST",
-  body: formData
-});
-const transcriptData = await transcriptRes.json();
-const transcript = transcriptData.transcript ?? "[No transcript returned]";
-if (!transcript || transcript === "[No transcript returned]") {
-  result.classList.add("alert-warning");
-  result.textContent = "❌ Transcription failed. Please try again.";
-  return;
-}
-
-await fetch(`${API_BASE_URL}/evaluate`, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-  userId: userId,                     // ✅ updated
-  question_id: currentQuestion.id,
-  mode: "speaking",
-  response_text: transcript
-})
-})
-.then(res => res.json())
-.then(data => console.log("🎙️ Speaking evaluation response:", data))
-.catch(err => console.error("❌ Speaking evaluation error:", err));
-
-
-        score++; // Score is incremented, but actual assessment would be done by AI/human
-        reviewLog.push({
-          question: currentQuestion.questionText,
-          userAnswer: "Spoken response submitted",
-          correctAnswer: "Evaluated after submission",
-          correct: null
-});
-
-      } else if (currentQuestion.answerType === "open-ended") {
-        const input = document.getElementById("writtenAnswer").value.trim();
-        const wordCount = input.split(/\s+/).filter(Boolean).length; // Count non-empty words
-        const minWords = currentQuestion.minWordCount || 50; // Default minimum words
-
-        if (wordCount >= minWords) {
-          result.classList.add("alert-success");
-          result.textContent = `✅ Answer submitted! Word count: ${wordCount}`;
-          console.log("📤 Evaluation payload:", {
-  userId,
-  mode: "writing",
-  transcript: currentQuestion.answerType === "spoken-response"
-    ? "This is a placeholder transcript"
-    : document.getElementById("writtenAnswer")?.value.trim()
-});
-          fetch(`${API_BASE_URL}/evaluate`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              userId: userId,
-              question_id: currentQuestion.id,
-              mode: "writing",
-              response_text: input
-            })
-          })
-.then(res => res.json())
-.then(data => console.log("📝 Writing evaluation response:", data))
-.catch(err => console.error("❌ Writing evaluation error:", err));
-          score++; // Score is incremented, but actual assessment would be done by AI/human
-        } else {
-          result.classList.add("alert-danger");
-          result.textContent = `❌ Minimum word count not met. You wrote ${wordCount} words, but at least ${minWords} are required.`;
-          return; // Prevent proceeding if word count not met
-        }
-      } else { // Multiple choice
-  const selected = document.querySelector("input[name='choice']:checked");
-  if (!selected) {
-    result.classList.add("alert-warning");
-    result.textContent = "Please select an answer.";
+  // 🔍 Debug logs and failsafe check
+  console.log("🔍 currentQuestion:", currentQuestion);
+  if (!currentQuestion?.id) {
+    console.warn("⛔ No currentQuestion.id — aborting evaluation.");
+    result.classList.add("alert-danger");
+    result.textContent = "Question data missing — cannot evaluate.";
     return;
   }
 
-  const payload = {
-  userId,
-  questionId: currentQuestion.id,
-  mode: "multiple-choice",
-  choice_id: parseInt(selected.value)
-};
+  if (currentQuestion.answerType === "spoken-response") {
+    // ... (existing code unchanged)
 
-  console.log("📤 Sending evaluation payload:", payload);
-
-  try {
-    const response = await fetch(`${API_BASE_URL}/evaluate`, {
+    await fetch(`${API_BASE_URL}/evaluate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
+      body: JSON.stringify({
+        userId: userId,
+        questionId: currentQuestion.id, // ✅ Confirmed camelCase
+        mode: "speaking",
+        response_text: transcript
+      })
+    })
+    .then(res => res.json())
+    .then(data => console.log("🎙️ Speaking evaluation response:", data))
+    .catch(err => console.error("❌ Speaking evaluation error:", err));
 
-    const data = await response.json();
-    console.log("✅ Multiple-choice evaluation:", data);
+    // ...
+  } else if (currentQuestion.answerType === "open-ended") {
+    const input = document.getElementById("writtenAnswer").value.trim();
+    const wordCount = input.split(/\s+/).filter(Boolean).length;
+    const minWords = currentQuestion.minWordCount || 50;
 
-    const isCorrect = data.score === 1;
+    if (wordCount >= minWords) {
+      result.classList.add("alert-success");
+      result.textContent = `✅ Answer submitted! Word count: ${wordCount}`;
 
-    result.classList.add(isCorrect ? "alert-success" : "alert-danger");
-    result.textContent = data.feedback ?? (isCorrect ? "Correct!" : "Incorrect.");
+      console.log("📤 Writing evaluation payload:", {
+        userId,
+        questionId: currentQuestion.id,
+        mode: "writing",
+        response_text: input
+      });
 
-    reviewLog.push({
-  question: currentQuestion.questionText,
-  userAnswer: data.transcript, // this is the full text now
-  correctAnswer: currentQuestion.correctAnswer,
-  correct: isCorrect
-});
+      fetch(`${API_BASE_URL}/evaluate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: userId,
+          questionId: currentQuestion.id, // ✅ Confirmed camelCase
+          mode: "writing",
+          response_text: input
+        })
+      })
+      .then(res => res.json())
+      .then(data => console.log("📝 Writing evaluation response:", data))
+      .catch(err => console.error("❌ Writing evaluation error:", err));
 
-    if (isCorrect) score++;
-  } catch (error) {
-    console.error("❌ Evaluation error:", error);
-    result.classList.add("alert-warning");
-    result.textContent = "Evaluation failed. Please try again.";
-  }
-}
-
-      // Show next button, hide submit button
-      document.getElementById("submitBtn").classList.add("d-none");
-      document.getElementById("nextBtn").classList.remove("d-none");
+      score++;
+    } else {
+      result.classList.add("alert-danger");
+      result.textContent = `❌ Minimum word count not met. You wrote ${wordCount} words, but at least ${minWords} are required.`;
+      return;
+    }
+  } else { // Multiple choice
+    const selected = document.querySelector("input[name='choice']:checked");
+    if (!selected) {
+      result.classList.add("alert-warning");
+      result.textContent = "Please select an answer.";
+      return;
     }
 
-    // Function to display the final test results
-    async function showFinalResults() {
-      document.getElementById("quizCard").classList.add("d-none"); // Hide the quiz
-      document.getElementById("result").classList.add("d-none"); // Hide the current question's result message
+    const payload = {
+      userId,
+      questionId: currentQuestion.id, // ✅ Confirmed camelCase
+      mode: "multiple-choice",
+      choice_id: parseInt(selected.value)
+    };
+
+    console.log("🔍 currentQuestion:", currentQuestion);
+    console.log("📤 Sending evaluation payload:", payload);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/evaluate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await response.json();
+      console.log("✅ Multiple-choice evaluation:", data);
+
+      const isCorrect = data.score === 1;
+      result.classList.add(isCorrect ? "alert-success" : "alert-danger");
+      result.textContent = data.feedback ?? (isCorrect ? "Correct!" : "Incorrect.");
+
+      reviewLog.push({
+        question: currentQuestion.questionText,
+        userAnswer: data.transcript,
+        correctAnswer: currentQuestion.correctAnswer,
+        correct: isCorrect
+      });
+
+      if (isCorrect) score++;
+    } catch (error) {
+      console.error("❌ Evaluation error:", error);
+      result.classList.add("alert-warning");
+      result.textContent = "Evaluation failed. Please try again.";
+    }
+  }
+
+  document.getElementById("submitBtn").classList.add("d-none");
+  document.getElementById("nextBtn").classList.remove("d-none");
+}
+
+// Function to display the final test results
+async function showFinalResults() {
+  document.getElementById("quizCard").classList.add("d-none"); // Hide the quiz
+  document.getElementById("result").classList.add("d-none"); // Hide the current question's result message
 
       // Call the new showSummary function to populate and display the summary card
       await showSummary(userId);
