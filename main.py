@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional
 import os
 import sys
+import re  # ✅ Added for clean()
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
@@ -84,7 +85,7 @@ def get_rubrics():
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 
-# ✅ UPDATED model with Pydantic v2 syntax
+# ✅ Model aligned with frontend keys
 class EvaluationRequest(BaseModel):
     userId: int
     questionId: int
@@ -96,6 +97,10 @@ class EvaluationRequest(BaseModel):
         validate_by_name=True,
         validate_by_alias=True
     )
+
+# ✅ Utility for normalizing text comparison
+def clean(text):
+    return re.sub(r'\W+', '', text or '').strip().lower()
 
 @app.post("/evaluate")
 async def evaluate_response(data: EvaluationRequest):
@@ -160,21 +165,20 @@ async def evaluate_response(data: EvaluationRequest):
             with get_connection() as conn:
                 cursor = conn.cursor()
 
-                # Get selected choice_text
                 cursor.execute("SELECT choice_text FROM choices WHERE id = %s", (data.choice_id,))
                 result = cursor.fetchone()
                 if not result:
                     return JSONResponse(status_code=404, content={"error": "Selected choice not found."})
                 user_choice_text = result[0]
 
-                # Get correct answer from question
                 cursor.execute("SELECT correct_answer FROM questions WHERE id = %s", (data.questionId,))
                 result = cursor.fetchone()
                 if not result:
                     return JSONResponse(status_code=404, content={"error": "Correct answer not found."})
                 correct_text = result[0]
 
-                is_correct = user_choice_text.strip().lower() == correct_text.strip().lower()
+                # ✅ Apply cleaner before comparison
+                is_correct = clean(user_choice_text) == clean(correct_text)
                 score = 1 if is_correct else 0
                 feedback = "✅ Correct!" if is_correct else "❌ Incorrect."
                 transcript = user_choice_text
