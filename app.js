@@ -368,11 +368,11 @@ await fetch(`${API_BASE_URL}/evaluate`, {
   }
 
   const payload = {
-    userId,
-    question_id: currentQuestion.id,
-    mode: "multiple-choice",
-    choice_id: parseInt(selected.value)
-  };
+  userId,
+  questionId: currentQuestion.id,
+  mode: "multiple-choice",
+  choice_id: parseInt(selected.value)
+};
 
   console.log("📤 Sending evaluation payload:", payload);
 
