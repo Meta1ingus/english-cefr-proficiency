@@ -2,7 +2,7 @@ from fastapi import FastAPI, Query, HTTPException, Body
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional
 import os
 import sys
@@ -84,6 +84,7 @@ def get_rubrics():
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 
+# ✅ UPDATED model with Pydantic v2 syntax
 class EvaluationRequest(BaseModel):
     user_id: int = Field(..., alias="userId")
     question_id: int
@@ -91,8 +92,10 @@ class EvaluationRequest(BaseModel):
     response_text: Optional[str] = None
     choice_id: Optional[int] = None
 
-    class Config:
-        allow_population_by_field_name = True
+    model_config = ConfigDict(
+        validate_by_name=True,
+        validate_by_alias=True
+    )
 
 @app.post("/evaluate")
 async def evaluate_response(data: EvaluationRequest):
