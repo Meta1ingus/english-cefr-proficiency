@@ -374,6 +374,8 @@ await fetch(`${API_BASE_URL}/evaluate`, {
     choice_id: parseInt(selected.value)
   };
 
+  console.log("📤 Sending evaluation payload:", payload);
+
   try {
     const response = await fetch(`${API_BASE_URL}/evaluate`, {
       method: "POST",
