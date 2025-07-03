@@ -271,68 +271,64 @@ function setupSpeakingRecording(q) {
 
   // 🔍 Debug logs and failsafe check
   console.log("🔍 currentQuestion:", currentQuestion);
-  if (!currentQuestion?.id) {
-    console.warn("⛔ No currentQuestion.id — aborting evaluation.");
+  if (!currentQuestion?.question_id) {
+    console.warn("⛔ No currentQuestion.question_id — aborting evaluation.");
     result.classList.add("alert-danger");
     result.textContent = "Question data missing — cannot evaluate.";
     return;
   }
 
   if (currentQuestion.answerType === "spoken-response") {
-    // ... (existing code unchanged)
+    const transcript = window.latestTranscript || "";
+    const payload = {
+      userId,
+      questionId: currentQuestion.question_id, // ✅ FIXED
+      mode: "speaking",
+      response_text: transcript
+    };
 
+    console.log("📤 Speaking payload:", payload);
     await fetch(`${API_BASE_URL}/evaluate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        userId: userId,
-        questionId: currentQuestion.id, // ✅ Confirmed camelCase
-        mode: "speaking",
-        response_text: transcript
-      })
+      body: JSON.stringify(payload)
     })
     .then(res => res.json())
     .then(data => console.log("🎙️ Speaking evaluation response:", data))
     .catch(err => console.error("❌ Speaking evaluation error:", err));
 
-    // ...
   } else if (currentQuestion.answerType === "open-ended") {
     const input = document.getElementById("writtenAnswer").value.trim();
     const wordCount = input.split(/\s+/).filter(Boolean).length;
     const minWords = currentQuestion.minWordCount || 50;
 
-    if (wordCount >= minWords) {
-      result.classList.add("alert-success");
-      result.textContent = `✅ Answer submitted! Word count: ${wordCount}`;
-
-      console.log("📤 Writing evaluation payload:", {
-        userId,
-        questionId: currentQuestion.id,
-        mode: "writing",
-        response_text: input
-      });
-
-      fetch(`${API_BASE_URL}/evaluate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: userId,
-          questionId: currentQuestion.id, // ✅ Confirmed camelCase
-          mode: "writing",
-          response_text: input
-        })
-      })
-      .then(res => res.json())
-      .then(data => console.log("📝 Writing evaluation response:", data))
-      .catch(err => console.error("❌ Writing evaluation error:", err));
-
-      score++;
-    } else {
+    if (wordCount < minWords) {
       result.classList.add("alert-danger");
       result.textContent = `❌ Minimum word count not met. You wrote ${wordCount} words, but at least ${minWords} are required.`;
       return;
     }
-  } else { // Multiple choice
+
+    const payload = {
+      userId,
+      questionId: currentQuestion.question_id, // ✅ FIXED
+      mode: "writing",
+      response_text: input
+    };
+
+    console.log("📤 Writing payload:", payload);
+    fetch(`${API_BASE_URL}/evaluate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(data => console.log("📝 Writing evaluation response:", data))
+    .catch(err => console.error("❌ Writing evaluation error:", err));
+
+    result.classList.add("alert-success");
+    result.textContent = `✅ Answer submitted! Word count: ${wordCount}`;
+    score++;
+  } else { // Multiple-choice
     const selected = document.querySelector("input[name='choice']:checked");
     if (!selected) {
       result.classList.add("alert-warning");
@@ -342,14 +338,12 @@ function setupSpeakingRecording(q) {
 
     const payload = {
       userId,
-      questionId: currentQuestion.id, // ✅ Confirmed camelCase
+      questionId: currentQuestion.question_id, // ✅ FIXED
       mode: "multiple-choice",
       choice_id: parseInt(selected.value)
     };
 
-    console.log("🔍 currentQuestion:", currentQuestion);
-    console.log("📤 Sending evaluation payload:", payload);
-
+    console.log("📤 Multiple-choice payload:", payload);
     try {
       const response = await fetch(`${API_BASE_URL}/evaluate`, {
         method: "POST",
