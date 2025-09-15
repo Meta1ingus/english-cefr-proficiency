@@ -63,7 +63,7 @@ Automated testing may be added in future iterations.
 ## 🚀 Deployment
 
 The project is deployed via GitHub Pages:  
-[Live Demo](https://your-github-username.github.io/english-cefr-proficiency)
+[Live Demo](https://meta1ingus.github.io/english-cefr-proficiency/)
 
 ---
 
