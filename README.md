@@ -33,7 +33,7 @@ This project aims to:
 
 ---
 
- ## 📁 **Project Structure**
+ ## 📁 Project Structure
 
 - english-cefr-proficiency/
   - index.html
@@ -42,8 +42,8 @@ This project aims to:
     - config.js
   - public/
     - audio/
-  - css/
-    - style.css
+    - css/
+        - style.css
   - README.md
 
 ---
