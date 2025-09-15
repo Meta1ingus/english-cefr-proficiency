@@ -33,18 +33,18 @@ This project aims to:
 
 ---
 
-## 📁 Project Structure
-english-cefr-proficiency/
-├── index.html
-├── js/
-   └── app.js
-   └── config.js
-├── public/
-   └── audio/
-   └── css/
-    └── style.css
-├── README.md
+ ## 📁 **Project Structure**
 
+- english-cefr-proficiency/
+  - index.html
+  - js/
+    - app.js
+    - config.js
+  - public/
+    - audio/
+  - css/
+    - style.css
+  - README.md
 
 ---
 
