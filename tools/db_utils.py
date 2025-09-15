@@ -9,14 +9,11 @@ if os.getenv("RENDER") is None:  # Optional: define your own flag
     load_dotenv(dotenv_path="tools/.env")
 
 def get_connection():
-    return psycopg2.connect(
-        dbname=os.getenv("DB_NAME"),
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASS"),
-        host=os.getenv("DB_HOST"),
-        port=os.getenv("DB_PORT", "5432"),
-        sslmode="require"  # required for external connections
-    )
+    db_url = os.getenv("DATABASE_URL")
+    if not db_url:
+        raise ValueError("❌ DATABASE_URL not found in environment")
+
+    return psycopg2.connect(db_url, sslmode="require")
 
 def get_all_questions():
     conn = get_connection()

@@ -356,7 +356,7 @@ function setupSpeakingRecording(q) {
 
       const isCorrect = data.score === 1;
       result.classList.add(isCorrect ? "alert-success" : "alert-danger");
-      result.textContent = data.feedback ?? (isCorrect ? "Correct!" : "Incorrect.");
+      result.textContent = "✅ Answer submitted!";
 
       reviewLog.push({
         question: currentQuestion.questionText,
