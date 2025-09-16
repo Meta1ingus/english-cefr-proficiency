@@ -15,6 +15,8 @@ An interactive web application designed to help users assess their English profi
 - [📚 Attribution](#-attribution)  
 - [🧠 Development Notes](#-development-notes)  
 - [🗂️ Version Control](#-version-control)
+- [🐞 Known Issues](#-known-issues)  
+- [📈 Future Improvements](#-future-improvements)
 
 ---
 
@@ -219,5 +221,89 @@ All external libraries are used via CDN and attributed above. Inline comments in
 ## 🗂️ Version Control
 
 Version control is managed via Git and GitHub. Commit messages reflect feature additions, bug fixes, and structural changes.
+
+---
+
+## 🐞 Known Issues
+
+The application is fully functional, but the following limitations have been identified during validation and testing:
+
+---
+
+### 🔄 Backend Logic
+- `get_all_questions()` in `db_utils.py` handles both data retrieval and processing — this violates separation of concerns and may affect maintainability.
+- Some SQL queries exceed the recommended line length and could be reformatted for readability.
+
+---
+
+### 📉 Performance
+- No caching or pagination is currently implemented for endpoints like `/questions` and `/responses`, which may impact performance with large datasets.
+- Audio transcription is synchronous and may introduce latency during speaking evaluations.
+
+---
+
+### 🔐 Security
+- File upload validation is minimal — audio files are checked for extension but not for size, type, or filename sanitization.
+- No authentication or role-based access control is currently enforced, leaving endpoints publicly accessible.
+
+---
+
+### 🧪 Testing & Monitoring
+- Unit tests are not yet implemented for backend logic or database interactions.
+- Error handling is generic in places — specific exceptions (e.g. `psycopg2.Error`) are not caught, which may obscure debugging.
+
+---
+
+### 📚 Documentation
+- Some backend functions lack descriptive docstrings, which may hinder future maintenance or onboarding.
+- Dependency management (e.g. `dotenv`) is not explicitly documented in `requirements.txt`.
+
+---
+
+These issues do not prevent the application from functioning correctly but are flagged for future resolution.
+
+---
+
+## 📈 Future Improvements
+
+While the current implementation is fully functional and compliant, several enhancements have been identified through external validation that could improve performance, maintainability, and security:
+
+---
+
+### 🧠 Code Refactoring
+- Move utility functions like `clean()` and `get_connection()` into dedicated modules for better separation of concerns.
+- Relocate Pydantic models (e.g. `EvaluationRequest`) to a `models.py` file to streamline `main.py`.
+- Split `get_all_questions()` into two functions: one for fetching data, one for processing and merging choices.
+
+---
+
+### ⚙️ Performance Optimization
+- Implement caching for frequently accessed resources (e.g. rubrics, passages, questions).
+- Add pagination to endpoints like `/questions` and `/responses` to handle large datasets efficiently.
+- Explore asynchronous processing for audio transcription to reduce latency during speaking evaluations.
+
+---
+
+### 🔐 Security Enhancements
+- Strengthen input validation for all request fields, including user IDs, question IDs, and file uploads.
+- Sanitize file names and enforce type/size restrictions for audio uploads.
+- Introduce authentication and role-based access control to protect sensitive endpoints.
+
+---
+
+### 🧪 Testing & Monitoring
+- Add unit tests for core logic, especially evaluation scoring and database interactions.
+- Improve error handling with more specific exception types (e.g. `psycopg2.Error`) and detailed messages.
+- Integrate logging throughout backend modules to support debugging and performance monitoring.
+
+---
+
+### 📦 Dependency Management
+- Ensure all dependencies (e.g. `dotenv`, `psycopg2`, `fastapi`) are listed in `requirements.txt` and documented in the README.
+- Consider using a virtual environment or containerization for consistent deployment.
+
+---
+
+These improvements are not required for current functionality but will support scalability, maintainability, and professional deployment in future iterations.
 
 ---
