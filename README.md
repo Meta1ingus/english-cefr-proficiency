@@ -48,15 +48,67 @@ This project aims to:
 
 ---
 
-## 🧪 Testing Procedures
+## ✅ Validation & Testing
 
-Manual testing was used to verify:
-- Layout responsiveness across screen sizes
-- Correct feedback on user input
-- CEFR badge logic and rubric toggle functionality
-- PDF export accuracy
+This project has been manually and externally validated for compliance, performance, and accessibility. Below are the key checks performed:
 
-Automated testing may be added in future iterations.
+---
+
+### 🔍 HTML Validation
+
+- ✅ Validated using [W3C HTML Validator](https://validator.w3.org/)
+- ✅ Confirmed semantic structure and proper tag nesting
+- ✅ Removed trailing slashes from void elements (`<meta>`, `<link>`, `<input>`, `<img>`)
+- ✅ Added `aria-live="polite"` to dynamic heading for accessibility
+- ✅ Provided fallback `src` for hidden `<img>` to avoid broken rendering
+
+📷 *Placeholder for screenshot of W3C HTML Validator results*
+
+---
+
+### 🎨 CSS Validation
+
+- ✅ Validated using [W3C CSS Validator](https://jigsaw.w3.org/css-validator/)
+- ✅ Confirmed syntax correctness and responsive layout
+- ✅ No deprecated properties or orphaned selectors
+- ✅ Externalized into `public/css/style.css` for maintainability
+
+📷 *Placeholder for screenshot of CSS Validator results*
+
+---
+
+### 🧠 JavaScript Validation
+
+- ✅ Validated using [Workik Code Syntax Validator](https://workik.com/code-syntax-validator)
+- ✅ ES6+ syntax confirmed: `async/await`, arrow functions, destructuring
+- ✅ Module imports (`config.js`) handled correctly
+- ✅ Event listeners scoped and attached cleanly
+- ✅ No unused variables or runtime errors
+
+📷 *Placeholder for screenshot of JS validation output*
+
+---
+
+### 🐍 Python Validation
+
+- ✅ `main.py` and `db_utils.py` reviewed for syntax and logic
+- ✅ Pydantic models used for request validation
+- ✅ SQL queries scoped and parameterized
+- ✅ Field naming (`question_id`, `userId`) matches frontend expectations
+- ✅ Error handling and response formatting confirmed
+
+📷 *Placeholder for screenshot of Python linting or test output*
+
+---
+
+### 🧪 Manual Testing
+
+- ✅ Verified layout responsiveness across devices
+- ✅ Confirmed CEFR badge logic and rubric toggle
+- ✅ Tested PDF export using `html2canvas` and `jsPDF`
+- ✅ Backend integration tested via fetch calls and response handling
+
+📷 *Placeholder for screenshot of quiz in action or CEFR badge display*
 
 ---
 
