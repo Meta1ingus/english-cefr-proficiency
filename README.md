@@ -103,15 +103,80 @@ This project has been manually and externally validated for compliance, performa
 
 ---
 
-### 🐍 Python Validation
+### 🐍 Python Validation (main.py)
 
-- ✅ `main.py` and `db_utils.py` reviewed for syntax and logic
-- ✅ Pydantic models used for request validation
-- ✅ SQL queries scoped and parameterized
-- ✅ Field naming (`question_id`, `userId`) matches frontend expectations
-- ✅ Error handling and response formatting confirmed
+The `main.py` backend was validated using [AIpy Python Code Checker](https://aipy.dev/tools/python-code-checker). Key findings:
 
-📷 *Placeholder for screenshot of Python linting or test output*
+#### ✅ Syntax & Style
+- No syntax errors detected — code is executable and clean.
+- Follows PEP8 conventions with minor suggestions:
+  - Consider moving `clean()` and `EvaluationRequest` to separate utility modules.
+  - Rename generic variables like `result` for clarity.
+
+#### ✅ Best Practices
+- Uses `JSONResponse` for structured error handling.
+- Database connections managed via context manager (`with get_connection()`).
+- Pydantic models enforce input validation and maintain contract integrity.
+- Separation of concerns between API logic and database utilities is well maintained.
+
+#### ⚙️ Performance Considerations
+- Backend queries are functional but could benefit from:
+  - Caching frequently accessed data (e.g. rubrics, questions).
+  - Pagination for large datasets.
+  - Async processing for `transcribe_with_huggingface()` to reduce latency.
+
+#### 🔐 Security Review
+- Basic input validation is in place, but could be expanded to:
+  - Sanitize and validate all incoming fields (e.g. user ID, question ID).
+  - Harden file upload logic (type checks, size limits, filename sanitization).
+  - Add authentication and role-based access control.
+
+#### 🧪 Suggested Improvements
+- Refactor utility functions into dedicated modules for maintainability.
+- Implement caching and async logic for performance.
+- Expand input validation and error logging.
+- Add unit tests for evaluation logic and DB interactions.
+
+📷 *Placeholder for screenshot of AIpy validation results*
+
+---
+
+### 🐍 Python Validation (db_utils.py)
+
+The `db_utils.py` module was validated using [AIpy Python Code Checker](https://aipy.dev/tools/python-code-checker). Key findings:
+
+#### ✅ Syntax & Style
+- No syntax errors detected — code is executable and clean.
+- Follows PEP8 conventions with minor suggestions:
+  - Some SQL query lines exceed the 79-character limit.
+  - Inconsistent naming: `get_db_connection()` vs. `get_connection()`.
+  - Functions lack descriptive docstrings for clarity and maintainability.
+
+#### ✅ Best Practices
+- Uses parameterized SQL queries to prevent injection risks.
+- Loads environment variables securely via `dotenv`.
+- Separation of concerns is mostly respected, though `get_all_questions()` handles both fetching and processing — consider splitting.
+- Suggest adding logging statements for better debugging and monitoring.
+
+#### ⚙️ Performance Considerations
+- Multiple queries in `get_all_questions()` and `get_user_responses()` could be optimized:
+  - Add pagination for large datasets.
+  - Consider offloading data processing to a separate service or module.
+  - Review SQL joins and column selection for efficiency.
+
+#### 🔐 Security Review
+- SQL injection risk mitigated via parameterized queries.
+- Environment variables used for DB credentials — ensure `.env` is excluded from version control.
+
+#### 🧪 Suggested Improvements
+- Split `get_all_questions()` into fetch and process layers.
+- Catch specific exceptions (e.g. `psycopg2.Error`) for clearer error handling.
+- Add detailed docstrings to all functions.
+- Implement pagination and query optimization.
+- Add structured logging for monitoring and debugging.
+- Ensure all dependencies (e.g. `dotenv`) are documented and managed via `requirements.txt`.
+
+📷 *Placeholder for screenshot of AIpy validation results*
 
 ---
 
