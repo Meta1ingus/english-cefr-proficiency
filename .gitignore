@@ -6,6 +6,7 @@ venv/
 *.egg-info/
 *.docx
 *.doc
+*.txt
 user_audio/
 # Ignore all files in tools/ except __init__.py and db_utils.py
 tools/*
@@ -16,3 +17,4 @@ utils/*
 !utils/__init__.py
 !utils/scoring.py
 !utils/transcriber.py
+*.code-workspace
