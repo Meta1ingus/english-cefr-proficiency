@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>English Language Proficiency Test</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="public/css/style.css">
 </head>
 <body class="bg-light">
@@ -16,14 +16,14 @@
     <!-- 🔐 Username Input Block -->
     <div id="namePrompt" class="card p-4 mb-4 shadow-sm">
       <label for="nameInput" class="form-label">Enter your name to begin:</label>
-      <input type="text" id="nameInput" class="form-control mb-2" placeholder="Your name..." required />
+      <input type="text" id="nameInput" class="form-control mb-2" placeholder="Your name..." required>
       <button id="startBtn" class="btn btn-primary">Start Test</button>
     </div>
 
     <!-- 🧪 Quiz Card -->
     <div id="quizCard" class="card p-4 shadow-sm d-none">
       <div id="progressText" class="text-muted mb-2">Question 1 of 60</div>
-      <h5 id="questionText" class="mb-3"></h5>
+      <h5 id="questionText" class="mb-3">Loading question...</h5>
       <div id="metaInfo" class="mb-2 text-secondary"></div>
 
       <!-- 🔹 Reading Passage -->
@@ -39,7 +39,7 @@
       </div>
 
       <audio id="audio" class="my-2" controls style="display: none;"></audio>
-      <img id="image" class="img-fluid my-2" style="max-height: 250px; display: none;" alt="" />
+      <img id="image" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" class="img-fluid my-2" style="max-height: 250px; display: none;" alt="Question image">
       <form id="choicesForm" class="mb-3"></form>
 
       <button id="submitBtn" class="btn btn-primary">Submit</button>
