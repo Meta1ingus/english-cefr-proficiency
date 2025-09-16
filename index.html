@@ -102,5 +102,15 @@
 
   <!-- Core Logic -->
   <script type="module" src="app.js"></script>
+
+  <script>
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("redirected") === "true") {
+    const msg = document.createElement("div");
+    msg.className = "alert alert-warning mt-3";
+    msg.textContent = "The page you requested doesn’t exist. You’ve been redirected to the homepage.";
+    document.querySelector(".container").prepend(msg);
+  }
+  </script>
 </body>
 </html>
