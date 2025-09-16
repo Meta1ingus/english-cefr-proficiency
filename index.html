@@ -107,10 +107,13 @@
   const params = new URLSearchParams(window.location.search);
   if (params.get("redirected") === "true") {
     const msg = document.createElement("div");
-    msg.className = "alert alert-warning mt-3";
-    msg.textContent = "The page you requested doesn’t exist. You’ve been redirected to the homepage.";
+    msg.className = "alert alert-warning alert-dismissible fade show mt-3";
+    msg.innerHTML = `
+      <button type="button" class="btn-close float-end" aria-label="Close" onclick="this.parentElement.remove()"></button>
+      The page you requested doesn’t exist. You’ve been redirected to the homepage.
+    `;
     document.querySelector(".container").prepend(msg);
-  }
+  }</script>
   </script>
 </body>
 </html>
