@@ -4,6 +4,9 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional
+from fastapi.responses import RedirectResponse
+from fastapi.requests import Request
+from fastapi import status
 import os
 import sys
 import re  # ✅ Added for clean()
@@ -220,3 +223,7 @@ def get_summary(user_id: int = Query(..., description="User ID to generate perfo
         return JSONResponse(content=get_user_summary(user_id))
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
+    
+@app.exception_handler(404)
+async def custom_404_handler(request: Request, exc):
+    return RedirectResponse(url="/?redirected=true", status_code=status.HTTP_302_FOUND)
