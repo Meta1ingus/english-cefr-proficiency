@@ -4,6 +4,20 @@ An interactive web application designed to help users assess their English profi
 
 ---
 
+## 📚 Table of Contents
+
+- [🎯 Purpose & Value](#-purpose--value)  
+- [🧩 Features](#-features)  
+- [🛠️ Technologies Used](#-technologies-used)  
+- [📁 Project Structure](#-project-structure)  
+- [✅ Validation & Testing](#-validation--testing)  
+- [🚀 Deployment](#-deployment)  
+- [📚 Attribution](#-attribution)  
+- [🧠 Development Notes](#-development-notes)  
+- [🗂️ Version Control](#-version-control)
+
+---
+
 ## 🎯 Purpose & Value
 
 This project aims to:
