@@ -15,7 +15,6 @@ import re  # ✅ Added for clean()
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from tools.db_utils import (
-    get_connection,
     get_all_questions,
     get_all_passages,
     get_all_rubrics,
@@ -179,35 +178,32 @@ async def evaluate_response(data: EvaluationRequest):
             if data.choice_id is None:
                 return JSONResponse(status_code=400, content={"error": "Missing choice ID for multiple-choice task."})
 
-            with get_connection() as conn:
-                cursor = conn.cursor()
+            # Supabase: Get selected choice text
+            choice_res = supabase.table("choices").select("choice_text").eq("id", data.choice_id).single().execute()
+            if not hasattr(choice_res, "data") or choice_res.data is None:
+                return JSONResponse(status_code=404, content={"error": "Selected choice not found."})
+            user_choice_text = choice_res.data.get("choice_text")
 
-                cursor.execute("SELECT choice_text FROM choices WHERE id = %s", (data.choice_id,))
-                result = cursor.fetchone()
-                if not result:
-                    return JSONResponse(status_code=404, content={"error": "Selected choice not found."})
-                user_choice_text = result[0]
+            # Supabase: Get correct answer
+            question_res = supabase.table("questions").select("correct_answer").eq("id", data.questionId).single().execute()
+            if not hasattr(question_res, "data") or question_res.data is None:
+                return JSONResponse(status_code=404, content={"error": "Correct answer not found."})
+            correct_text = question_res.data.get("correct_answer")
 
-                cursor.execute("SELECT correct_answer FROM questions WHERE id = %s", (data.questionId,))
-                result = cursor.fetchone()
-                if not result:
-                    return JSONResponse(status_code=404, content={"error": "Correct answer not found."})
-                correct_text = result[0]
-
-                # ✅ Apply cleaner before comparison
-                is_correct = clean(user_choice_text) == clean(correct_text)
-                score = 1 if is_correct else 0
-                feedback = "✅ Correct!" if is_correct else "❌ Incorrect."
-                transcript = user_choice_text
+            is_correct = clean(user_choice_text) == clean(correct_text)
+            score = 1 if is_correct else 0
+            feedback = "✅ Correct!" if is_correct else "❌ Incorrect."
+            transcript = user_choice_text
 
         else:
             return JSONResponse(status_code=400, content={"error": "Unsupported mode. Use 'writing', 'speaking', or 'multiple-choice'."})
 
+        # ✅ Updated log_response call
         log_response(
             user_id=data.userId,
             question_id=data.questionId,
-            mode=data.mode,
-            transcript=transcript,
+            response_text=transcript,
+            is_correct=(score == 1 if data.mode == "multiple-choice" else None),
             score=score
         )
 
