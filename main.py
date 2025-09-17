@@ -62,6 +62,10 @@ def register_user(data: dict = Body(...)):
 
     return {"user_id": user_id}
 
+@app.options("/register_user")
+def options_register_user():
+    return JSONResponse(content={}, status_code=200)
+
 app.mount("/audio", StaticFiles(directory=os.path.join("public", "audio")), name="audio")
 
 @app.get("/")
