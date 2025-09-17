@@ -30,7 +30,7 @@ from utils.transcriber import transcribe_with_huggingface
 from supabase import create_client  # 👈 Add this import
 
 SUPABASE_URL = "https://beypqcolcuzsbqonrrry.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJleXBxY29sY3V6c2Jxb25ycnJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxNDUzNzYsImV4cCI6MjA2NzcyMTM3Nn0.LsgWlTH6MQo6odafGOW7uCzD34lzNLV153MTrls-csY"
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
