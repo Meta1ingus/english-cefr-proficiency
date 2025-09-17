@@ -97,9 +97,14 @@ def get_passages():
 @app.get("/rubrics")
 def get_rubrics():
     try:
-        return JSONResponse(content=get_all_rubrics())
+        data = get_all_rubrics()
+        if not data:
+            return JSONResponse(status_code=404, content={"error": "No rubrics found"})
+        return JSONResponse(content=data)
     except Exception as e:
-        return JSONResponse(status_code=500, content={"error": str(e)})
+        print("❌ /rubrics error:", str(e))
+        traceback.print_exc()
+        return JSONResponse(status_code=500, content={"error": "Internal server error"})
 
 # ✅ Model aligned with frontend keys
 class EvaluationRequest(BaseModel):
