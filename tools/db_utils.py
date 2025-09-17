@@ -1,226 +1,156 @@
 import os
-import psycopg2
+from supabase import create_client
 from dotenv import load_dotenv
 from collections import defaultdict
+
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+
+if not SUPABASE_URL or not SUPABASE_KEY:
+    raise RuntimeError("❌ Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in environment")
+
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # Only load .env in local development
 if os.getenv("RENDER") is None:  # Optional: define your own flag
     from dotenv import load_dotenv
     load_dotenv(dotenv_path="tools/.env")
 
-def get_connection():
-    db_url = os.getenv("DATABASE_URL")
-    if not db_url:
-        raise ValueError("❌ DATABASE_URL not found in environment")
-
-    return psycopg2.connect(db_url, sslmode="require")
-
 def get_all_questions():
-    conn = get_connection()
-    cursor = conn.cursor()
+    # 1. Fetch questions
+    questions_res = supabase.table("questions").select("*").execute()
+    if not hasattr(questions_res, "data") or questions_res.data is None:
+        raise Exception("❌ Supabase query failed or returned no data")
+    question_rows = questions_res.data
 
-    # 1. Get questions
-    cursor.execute("""
-    SELECT 
-        id AS question_id,
-        question_text AS questionText,
-        category,
-        difficulty,
-        answer_type AS answerType,
-        correct_answer AS correctAnswer,
-        min_word_count AS minWordCount,
-        writing_type AS writingType,
-        rubric_id AS rubricId,
-        reading_id AS readingId,
-        audio
-    FROM questions;
-""")
+    # 2. Fetch choices
+    choices_res = supabase.table("choices").select("*").order("question_id").execute()
+    if not hasattr(choices_res, "data") or choices_res.data is None:
+        raise Exception("❌ Supabase query for choices failed or returned no data")
+    choice_rows = choices_res.data
 
-    question_rows = cursor.fetchall()
-    print("Fetched rows:", question_rows)
-
-    # 2. Get choices — updated to remove is_correct
-    cursor.execute("""
-    SELECT id, question_id, label, choice_text
-    FROM choices
-    ORDER BY question_id, label;
-""")
-
-    choice_rows = cursor.fetchall()
-
-# 3. Group choices by question_id into objects
+    # 3. Group choices by question_id
     choice_map = defaultdict(list)
-    for cid, qid, label, text in choice_rows:
-        choice_map[qid].append({
-            "id": cid,
-            "label": label,
-            "choice_text": text
+    for choice in choice_rows:
+        choice_map[choice["question_id"]].append({
+            "id": choice["id"],
+            "label": choice["label"],
+            "choice_text": choice.get("choice_text", "")
         })
 
-    cursor.close()
-    conn.close()
-
-        # 4. Merge questions and choices
+    # 4. Merge questions and choices
     questions_list = []
-
-    for i, q in enumerate(question_rows):
-        if len(q) != 11:
-            print(f"❌ Row {i} has {len(q)} fields — expected 11 → {q}")
-            continue
-
+    for q in question_rows:
         questions_list.append({
-            "question_id": q[0],
-            "questionText": q[1],
-            "category": q[2],
-            "difficulty": q[3],
-            "answerType": q[4],
-            "correctAnswer": q[5],
-            "minWordCount": q[6],
-            "writingType": q[7],
-            "rubricId": q[8],
-            "readingId": q[9],
-            "audio": q[10],
-            "choices": choice_map.get(q[0], [])
+            "question_id": q["id"],
+            "questionText": q["question_text"],
+            "category": q["category"],
+            "difficulty": q["difficulty"],
+            "answerType": q["answer_type"],
+            "correctAnswer": q["correct_answer"],
+            "minWordCount": q.get("min_word_count"),
+            "writingType": q.get("writing_type"),
+            "rubricId": q.get("rubric_id"),
+            "readingId": q.get("reading_id"),
+            "audio": q.get("audio"),
+            "choices": choice_map.get(q["id"], [])
         })
 
     return questions_list
 
 def get_all_rubrics():
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT rubric_id, description FROM rubrics;")
-    rows = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    return {rubric_id: description for rubric_id, description in rows}
+    response = supabase.table("rubrics").select("id, rubric_text").execute()
+    if not hasattr(response, "data") or response.data is None:
+        raise Exception("Failed to fetch rubrics from Supabase")
+    return {row["id"]: row["rubric_text"] for row in response.data}
 
 def get_all_passages():
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT reading_id, passage_text FROM passages;")
-    rows = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    return {reading_id: passage_text for reading_id, passage_text in rows}
+    response = supabase.table("passages").select("reading_id, passage_text").execute()
+    if not hasattr(response, "data") or response.data is None:
+        raise Exception("Failed to fetch passages from Supabase")
+    return {row["reading_id"]: row["passage_text"] for row in response.data}
 
 def get_rubric_by_question_id(question_id):
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT r.rubric_id, r.description 
-        FROM questions q
-        JOIN rubrics r ON q.rubric_id = r.rubric_id
-        WHERE q.id = %s;
-""", (question_id,))
-    row = cursor.fetchone()
-    cursor.close()
-    conn.close()
-    return {"rubric_id": row[0], "description": row[1]} if row else None
+    # Step 1: Get the question
+    question_res = supabase.table("questions").select("rubric_id").eq("id", question_id).single().execute()
+    if not hasattr(question_res, "data") or question_res.data is None:
+        raise Exception(f"❌ No question found with ID {question_id}")
+    rubric_id = question_res.data.get("rubric_id")
+    if rubric_id is None:
+        return None
+
+    # Step 2: Get the rubric
+    rubric_res = supabase.table("rubrics").select("rubric_text").eq("id", rubric_id).single().execute()
+    if not hasattr(rubric_res, "data") or rubric_res.data is None:
+        raise Exception(f"❌ No rubric found with ID {rubric_id}")
+    return rubric_res.data["rubric_text"]
 
 
-def log_response(user_id, question_id, mode, transcript, score):
-    conn = get_connection()
-    cursor = conn.cursor()
+def log_response(user_id, question_id, response_text, is_correct=None, score=None):
+    payload = {
+        "user_id": user_id,
+        "question_id": question_id,
+        "response_text": response_text,
+        "is_correct": is_correct,
+        "score": score
+    }
 
-    cursor.execute("""
-        INSERT INTO responses (user_id, question_id, mode, transcript, score)
-        VALUES (%s, %s, %s, %s, %s);
-    """, (user_id, question_id, mode, transcript, score))
-
-    conn.commit()
-    cursor.close()
-    conn.close()
+    response = supabase.table("responses").insert(payload).execute()
+    if not hasattr(response, "data") or response.data is None:
+        raise Exception("❌ Failed to log response to Supabase")
+    return response.data
 
 def get_user_responses(user_id: int):
-    conn = get_connection()
-    cursor = conn.cursor()
+    response = supabase.table("responses").select(
+        "question_id, mode, transcript, score, submitted_at"
+    ).eq("user_id", user_id).order("submitted_at", desc=True).execute()
 
-    cursor.execute("""
-        SELECT question_id, mode, transcript, score, submitted_at
-        FROM responses
-        WHERE user_id = %s
-        ORDER BY submitted_at DESC;
-    """, (user_id,))
+    if not hasattr(response, "data") or response.data is None:
+        raise Exception("❌ Failed to fetch user responses")
 
-    rows = cursor.fetchall()
-    cursor.close()
-    conn.close()
-
-    # Format results as a list of dictionaries
     results = []
-    for r in rows:
+    for r in response.data:
         results.append({
-            "question_id": r[0],
-            "mode": r[1],
-            "transcript": r[2],
-            "score": r[3],
-            "submitted_at": r[4].isoformat()
+            "question_id": r.get("question_id"),
+            "mode": r.get("mode"),
+            "transcript": r.get("transcript"),
+            "score": r.get("score"),
+            "submitted_at": r.get("submitted_at")
         })
 
     return results
 
-def get_user_summary(user_id: int):
-    conn = get_connection()
-    cursor = conn.cursor()
+def get_user_summary(user_id):
+    response = supabase.table("responses").select("score").eq("user_id", user_id).execute()
+    if not hasattr(response, "data") or response.data is None:
+        raise Exception("❌ Failed to fetch user summary")
 
-    cursor.execute("""
-        SELECT COUNT(*), AVG(score)
-        FROM responses
-        WHERE user_id = %s;
-""", (user_id,))
-    row = cursor.fetchone()
-    if row is not None:
-        total, avg = row
-    else:
-        total, avg = 0, None
-
-    cursor.execute("""
-        SELECT score, mode, submitted_at
-        FROM responses
-        WHERE user_id = %s
-        ORDER BY submitted_at DESC
-        LIMIT 1;
-    """, (user_id,))
-    recent = cursor.fetchone()
-
-    cursor.close()
-    conn.close()
-
+    scores = [r["score"] for r in response.data if r.get("score") is not None]
     return {
-        "total_submissions": total or 0,
-        "average_score": float(round(avg, 2)) if avg is not None else None,
-        "most_recent_score": recent[0] if recent else None,
-        "most_recent_mode": recent[1] if recent else None,
-        "last_updated": recent[2].isoformat() if recent else None
+        "total_responses": len(response.data),
+        "average_score": round(sum(scores) / len(scores), 2) if scores else None
     }
 
-def score_transcript_by_rubric(transcript: str, rubric_id: int) -> tuple[float, dict]:
-    conn = get_connection()  # Corrected from get_db_connection
-    cur = conn.cursor()
+def score_transcript_by_rubric(question_id, transcript):
+    # Step 1: Get rubric_id from question
+    question_res = supabase.table("questions").select("rubric_id").eq("id", question_id).single().execute()
+    if not hasattr(question_res, "data") or question_res.data is None:
+        raise Exception(f"❌ No question found with ID {question_id}")
+    rubric_id = question_res.data.get("rubric_id")
+    if rubric_id is None:
+        return {"score": None, "feedback": "No rubric attached to this question."}
 
-    cur.execute("""
-        SELECT criterion, max_score
-        FROM rubric_criteria
-        WHERE rubric_id = %s
-    """, (rubric_id,))
-    rows = cur.fetchall()
+    # Step 2: Get rubric text
+    rubric_res = supabase.table("rubrics").select("rubric_text").eq("id", rubric_id).single().execute()
+    if not hasattr(rubric_res, "data") or rubric_res.data is None:
+        return {"score": None, "feedback": "Rubric not found."}
+    rubric_text = rubric_res.data.get("rubric_text")
 
-    criteria_scores = {}
-    total = 0
+    # Step 3: Apply scoring logic (placeholder)
+    score = min(len(transcript.split()) // 10, 5)  # crude word-count-based score
+    if rubric_text is not None:
+        feedback = f"Scored based on rubric: {rubric_text[:60]}..."
+    else:
+        feedback = "Scored, but rubric text was not found."
 
-    for criterion, max_score in rows:
-        # ⚙️ Placeholder scoring logic — refine as needed
-        if criterion.lower() == "fluency":
-            score = min(max_score, len(transcript.split()) // 8)
-        elif criterion.lower() == "grammar":
-            score = min(max_score, 4)  # Simulate basic grammar scoring
-        elif criterion.lower() == "vocabulary":
-            score = min(max_score, 3 + ("however" in transcript.lower()))
-        else:
-            score = max_score // 2  # Default mid-range score
-
-        criteria_scores[criterion] = score
-        total += score
-
-    average_score = round(total / len(criteria_scores), 1) if criteria_scores else 0.0
-    return average_score, criteria_scores
+    return {"score": score, "feedback": feedback}
