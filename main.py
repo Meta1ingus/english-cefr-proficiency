@@ -27,6 +27,13 @@ from tools.db_utils import (
 
 from utils.transcriber import transcribe_with_huggingface
 
+from supabase import create_client  # 👈 Add this import
+
+SUPABASE_URL = "https://beypqcolcuzsbqonrrry.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+
 app = FastAPI()
 
 app.add_middleware(
@@ -43,21 +50,15 @@ def register_user(data: dict = Body(...)):
     if not name:
         raise HTTPException(status_code=400, detail="Name is required")
 
-    with get_connection() as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT id FROM users WHERE name = %s", (name,))
-        result = cursor.fetchone()
+    response = supabase.table("users").select("id").eq("name", name).execute()
 
-        if result:
-            user_id = result[0]
-        else:
-            cursor.execute("INSERT INTO users (name) VALUES (%s) RETURNING id", (name,))
-            result = cursor.fetchone()
-            if result is None:
-                raise HTTPException(status_code=500, detail="Failed to retrieve user ID after insertion")
-
-        user_id = result[0]
-        conn.commit()
+    if response.data:
+        user_id = response.data[0]["id"]
+    else:
+        insert_response = supabase.table("users").insert({"name": name}).execute()
+        if not insert_response.data or "id" not in insert_response.data[0]:
+            raise HTTPException(status_code=500, detail="Failed to insert user into Supabase")
+        user_id = insert_response.data[0]["id"]
 
     return {"user_id": user_id}
 
