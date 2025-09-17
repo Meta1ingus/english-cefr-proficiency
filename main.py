@@ -7,6 +7,7 @@ from typing import Optional
 from fastapi.responses import RedirectResponse
 from fastapi.requests import Request
 from fastapi import status
+import traceback
 import os
 import sys
 import re  # ✅ Added for clean()
@@ -78,8 +79,13 @@ def read_root():
 @app.get("/questions")
 def get_questions():
     try:
-        return JSONResponse(content=get_all_questions())
+        print("DATABASE_URL:", os.getenv("DATABASE_URL"))
+        print("SUPABASE_URL:", os.getenv("SUPABASE_URL"))
+        data = get_all_questions()
+        return JSONResponse(content=data)
     except Exception as e:
+        print("Error in /questions:", str(e))
+        traceback.print_exc()  # ← This is the key line to add
         return JSONResponse(status_code=500, content={"error": str(e)})
 
 @app.get("/passages")
