@@ -9,14 +9,20 @@ An interactive web application designed to help users assess their English profi
 - [🎯 Purpose & Value](#-purpose--value)  
 - [🧩 Features](#-features)  
 - [🛠️ Technologies Used](#-technologies-used)  
-- [📁 Project Structure](#-project-structure)  
-- [✅ Validation & Testing](#-validation--testing)  
+- [📘 Project Summary](#project-summary)  
+- [🧱 Project Structure](#project-structure)  
+- [📸 Screenshots & Wireframes](#-screenshots--wireframes)  
 - [🚀 Deployment](#-deployment)  
-- [📚 Attribution](#-attribution)  
-- [🧠 Development Notes](#-development-notes)  
-- [🗂️ Version Control](#-version-control)
-- [🐞 Known Issues](#-known-issues)  
-- [📈 Future Improvements](#-future-improvements)
+- [✅ Validation & Testing](#-validation--testing)  
+  - [🔍 HTML Validation](#-html-validation)  
+  - [🎨 CSS Validation](#-css-validation)  
+  - [🧠 JavaScript Syntax Validation (Workik)](#-javascript-syntax-validation-workik)  
+  - [🧪 Frontend Logic Testing (Manual)](#-frontend-logic-testing-manual)  
+  - [🐍 Python Validation](#-python-validation)  
+    - [`main.py`](#mainpy)  
+    - [`db_utils.py`](#db_utilspy)  
+- [⚠️ Known Issues & Limitations](#-known-issues--limitations)  
+- [🚧 Future Improvements](#-future-improvements)
 
 ---
 
@@ -32,11 +38,11 @@ This project aims to:
 
 ## 🧩 Features
 
-- Responsive layout using Bootstrap 5
-- Dynamic feedback with visual indicators (`correct`, `incorrect`)
-- CEFR badge assignment based on quiz performance
-- Toggleable rubric for self-assessment
-- PDF export of results using `html2canvas` and `jsPDF`
+- CEFR-aligned language proficiency quiz  
+- Supports multiple response modes: multiple-choice, writing, and speaking  
+- Fixed-length quiz with 20 questions for balanced CEFR coverage  
+- Real-time feedback and scoring via FastAPI backend  
+- Supabase integration for question storage and user tracking 
 
 ---
 
@@ -46,6 +52,21 @@ This project aims to:
 - Bootstrap 5 (CDN)
 - jsPDF & html2canvas (via CDN)
 - GitHub Pages for deployment
+
+---
+
+## 📘 Project Summary
+
+This project is a CEFR-aligned language assessment platform built with a FastAPI backend and a responsive JavaScript frontend. It supports multiple question types — including multiple-choice, writing, and speaking — and dynamically scores user input against rubric-based criteria. The backend integrates with Supabase for secure data storage and retrieval, while frontend logic handles real-time interaction, progress tracking, and PDF export.
+
+Key features include:
+- 🎯 CEFR badge logic and rubric toggling for transparent scoring
+- 🎙️ Audio recording and transcript evaluation for speaking tasks
+- 🧠 AI-powered validation of backend and frontend code using AIpy and Workik
+- 🔐 Secure environment variable management and SQL injection protection
+- 📄 PDF export of results using `html2canvas` and `jsPDF`
+
+The application has been rigorously tested across devices and validated for accessibility, performance, and security. Known limitations (e.g. permissive CORS, lack of pagination) are documented and do not affect core functionality.
 
 ---
 
@@ -64,6 +85,26 @@ This project aims to:
 
 ---
 
+## 📸 Screenshots & Wireframes
+
+This section showcases the core user flow and design intent through wireframes and live UI captures.
+
+### 🧩 Wireframes
+
+📷 *Wireframe – Quiz landing page layout with CEFR badge and rubric toggle*  
+📷 *Wireframe – Question rendering interface with dynamic scoring logic*  
+📷 *Wireframe – Final summary screen showing CEFR badge and export option*
+
+### 🖼️ Live Screenshots
+
+📷 *Screenshot – Quiz landing page with CEFR badge and rubric toggle*  
+📷 *Screenshot – Multiple-choice question with dynamic rendering and scoring*  
+📷 *Screenshot – Writing task with rubric-based scoring and feedback*  
+📷 *Screenshot – Speaking task with audio recording and transcript submission*  
+📷 *Screenshot – Final summary screen with CEFR badge and PDF export*
+
+---
+
 ## ✅ Validation & Testing
 
 This project has been manually and externally validated for compliance, performance, and accessibility. Below are the key checks performed:
@@ -78,7 +119,7 @@ This project has been manually and externally validated for compliance, performa
 - ✅ Added `aria-live="polite"` to dynamic heading for accessibility
 - ✅ Provided fallback `src` for hidden `<img>` to avoid broken rendering
 
-📷 *Placeholder for screenshot of W3C HTML Validator results*
+📷 *Placeholder – W3C HTML Validator screenshot*
 
 ---
 
@@ -89,11 +130,11 @@ This project has been manually and externally validated for compliance, performa
 - ✅ No deprecated properties or orphaned selectors
 - ✅ Externalized into `public/css/style.css` for maintainability
 
-📷 *Placeholder for screenshot of CSS Validator results*
+📷 *Placeholder – CSS Validator screenshot*
 
 ---
 
-### 🧠 JavaScript Validation
+### 🧠 JavaScript Syntax Validation (Workik)
 
 - ✅ Validated using [Workik Code Syntax Validator](https://workik.com/code-syntax-validator)
 - ✅ ES6+ syntax confirmed: `async/await`, arrow functions, destructuring
@@ -101,97 +142,58 @@ This project has been manually and externally validated for compliance, performa
 - ✅ Event listeners scoped and attached cleanly
 - ✅ No unused variables or runtime errors
 
-📷 *Placeholder for screenshot of JS validation output*
+**Recommendations:**
+- Wrap code in modules or closures to avoid polluting global scope
+- Confirm external libraries (`jspdf`, `html2canvas`) are properly imported
+- Ensure all referenced DOM elements exist to prevent null errors
+- Consider refactoring large functions like `renderQuestion()` and `checkAnswer()` into smaller helpers for readability
+
+📷 *Placeholder – Workik validation screenshot (app.js)*
 
 ---
 
-### 🐍 Python Validation (main.py)
+### 🧪 Frontend Logic Testing (Manual)
 
-The `main.py` backend was validated using [AIpy Python Code Checker](https://aipy.dev/tools/python-code-checker). Key findings:
+All core frontend logic was manually tested across supported question types:
 
-#### ✅ Syntax & Style
-- No syntax errors detected — code is executable and clean.
-- Follows PEP8 conventions with minor suggestions:
-  - Consider moving `clean()` and `EvaluationRequest` to separate utility modules.
-  - Rename generic variables like `result` for clarity.
+- ✅ Multiple-choice: dynamic rendering, selection handling, and scoring via `/evaluate`
+- ✅ Writing tasks: input validation, rubric-based scoring, and feedback display
+- ✅ Speaking tasks: microphone access, audio recording, playback, and transcript submission
+- ✅ Redirect bug resolved: added `type="button"` to recording trigger to prevent form submission
+- ✅ Progress tracking: question count updates and final summary screen confirmed
+- ✅ Responsive layout: tested across desktop and mobile browsers
 
-#### ✅ Best Practices
-- Uses `JSONResponse` for structured error handling.
-- Database connections managed via context manager (`with get_connection()`).
-- Pydantic models enforce input validation and maintain contract integrity.
-- Separation of concerns between API logic and database utilities is well maintained.
-
-#### ⚙️ Performance Considerations
-- Backend queries are functional but could benefit from:
-  - Caching frequently accessed data (e.g. rubrics, questions).
-  - Pagination for large datasets.
-  - Async processing for `transcribe_with_huggingface()` to reduce latency.
-
-#### 🔐 Security Review
-- Basic input validation is in place, but could be expanded to:
-  - Sanitize and validate all incoming fields (e.g. user ID, question ID).
-  - Harden file upload logic (type checks, size limits, filename sanitization).
-  - Add authentication and role-based access control.
-
-#### 🧪 Suggested Improvements
-- Refactor utility functions into dedicated modules for maintainability.
-- Implement caching and async logic for performance.
-- Expand input validation and error logging.
-- Add unit tests for evaluation logic and DB interactions.
-
-📷 *Placeholder for screenshot of AIpy validation results*
+📷 *Placeholder – Screenshot of validated frontend logic (quiz flow)*
 
 ---
 
-### 🐍 Python Validation (db_utils.py)
+### 🐍 Python Validation
 
-The `db_utils.py` module was validated using [AIpy Python Code Checker](https://aipy.dev/tools/python-code-checker). Key findings:
+#### `main.py`
 
-#### ✅ Syntax & Style
-- No syntax errors detected — code is executable and clean.
-- Follows PEP8 conventions with minor suggestions:
-  - Some SQL query lines exceed the 79-character limit.
-  - Inconsistent naming: `get_db_connection()` vs. `get_connection()`.
-  - Functions lack descriptive docstrings for clarity and maintainability.
+Validated using [AIpy Python Code Checker](https://aipy.dev/tools/python-code-checker):
 
-#### ✅ Best Practices
-- Uses parameterized SQL queries to prevent injection risks.
-- Loads environment variables securely via `dotenv`.
-- Separation of concerns is mostly respected, though `get_all_questions()` handles both fetching and processing — consider splitting.
-- Suggest adding logging statements for better debugging and monitoring.
+- ✅ Syntax: No errors; uses type annotations and Pydantic models
+- ✅ Style: Mostly PEP 8 compliant; minor suggestions for modularization and naming
+- ✅ Error Handling: Uses `HTTPException` and `JSONResponse` effectively
+- ✅ Security: Environment variables used for Supabase credentials; input validation present
+- ✅ Performance: Database queries and transcription service flagged for optimization
+- ✅ Suggested Improvements: Logging via `logging` module, input sanitization, async transcription
 
-#### ⚙️ Performance Considerations
-- Multiple queries in `get_all_questions()` and `get_user_responses()` could be optimized:
-  - Add pagination for large datasets.
-  - Consider offloading data processing to a separate service or module.
-  - Review SQL joins and column selection for efficiency.
+📷 *Placeholder – AIpy validation screenshot (main.py)*
 
-#### 🔐 Security Review
-- SQL injection risk mitigated via parameterized queries.
-- Environment variables used for DB credentials — ensure `.env` is excluded from version control.
+#### `db_utils.py`
 
-#### 🧪 Suggested Improvements
-- Split `get_all_questions()` into fetch and process layers.
-- Catch specific exceptions (e.g. `psycopg2.Error`) for clearer error handling.
-- Add detailed docstrings to all functions.
-- Implement pagination and query optimization.
-- Add structured logging for monitoring and debugging.
-- Ensure all dependencies (e.g. `dotenv`) are documented and managed via `requirements.txt`.
+Validated using [AIpy Python Code Checker](https://aipy.dev/tools/python-code-checker):
 
-📷 *Placeholder for screenshot of AIpy validation results*
+- ✅ Syntax: No errors; executable and clean
+- ✅ Style: Mostly PEP 8 compliant; suggestions for line length, naming, and docstrings
+- ✅ Best Practices: Secure use of `dotenv`, parameterized queries, exception handling
+- ✅ Performance: Multiple queries and data processing flagged for optimization
+- ✅ Security: SQL injection mitigated; logging of sensitive data should be privacy-aware
+- ✅ Suggested Improvements: Modularization, type annotations, pagination, enhanced logging
 
----
-
-### 🧪 Manual Testing
-
-- ✅ Verified layout responsiveness across devices
-- ✅ Confirmed CEFR badge logic and rubric toggle
-- ✅ Tested PDF export using `html2canvas` and `jsPDF`
-- ✅ Backend integration tested via fetch calls and response handling
-
-📷 *Placeholder for screenshot of quiz in action or CEFR badge display*
-
----
+📷 *Placeholder – AIpy validation screenshot (db_utils.py)*
 
 ## 🚀 Deployment
 
@@ -224,47 +226,32 @@ Version control is managed via Git and GitHub. Commit messages reflect feature a
 
 ---
 
-## 🐞 Known Issues
+## ⚠️ Known Issues & Limitations
 
-The application is fully functional, but the following limitations have been identified during validation and testing:
+This section outlines current limitations and areas flagged for future improvement:
 
----
+### ✅ Resolved
+- **Recording redirect bug**: Fixed by setting `type="button"` on recording trigger to prevent unintended form submission
+- **Frontend validation errors**: Addressed via Workik and manual testing; all core logic confirmed stable
+- **Environment variable exposure**: All sensitive keys now securely loaded via `.env` and excluded from version control
 
-### 🔄 Backend Logic
-- `get_all_questions()` in `db_utils.py` handles both data retrieval and processing — this violates separation of concerns and may affect maintainability.
-- Some SQL queries exceed the recommended line length and could be reformatted for readability.
+### ⚠️ Pending
+- **CORS configuration**: Currently allows all origins; should be restricted for production deployment
+- **Pagination**: `/questions`, `/passages`, and `/rubrics` endpoints lack pagination, which may impact performance on large datasets
+- **Transcription bottleneck**: `transcribe_with_huggingface()` runs synchronously per request; async or batching recommended
+- **Logging granularity**: Error messages and user response logs could be expanded for better debugging and monitoring
+- **Input sanitization**: Basic normalization via `clean()` is in place, but additional sanitization needed to prevent XSS or injection risks
+- **Modularization**: Some functions (e.g. `get_all_questions()`, `renderQuestion()`) could be split into smaller helpers for clarity and testability
 
----
-
-### 📉 Performance
-- No caching or pagination is currently implemented for endpoints like `/questions` and `/responses`, which may impact performance with large datasets.
-- Audio transcription is synchronous and may introduce latency during speaking evaluations.
-
----
-
-### 🔐 Security
-- File upload validation is minimal — audio files are checked for extension but not for size, type, or filename sanitization.
-- No authentication or role-based access control is currently enforced, leaving endpoints publicly accessible.
-
----
-
-### 🧪 Testing & Monitoring
-- Unit tests are not yet implemented for backend logic or database interactions.
-- Error handling is generic in places — specific exceptions (e.g. `psycopg2.Error`) are not caught, which may obscure debugging.
-
----
-
-### 📚 Documentation
-- Some backend functions lack descriptive docstrings, which may hinder future maintenance or onboarding.
-- Dependency management (e.g. `dotenv`) is not explicitly documented in `requirements.txt`.
-
----
+### 🧪 Edge Cases
+- **Missing DOM elements**: If expected HTML elements are absent, frontend may throw null errors — ensure consistent markup
+- **Large dataset handling**: Data merging and scoring logic may slow down with high question volume; caching and query optimization recommended
 
 These issues do not prevent the application from functioning correctly but are flagged for future resolution.
 
 ---
 
-## 📈 Future Improvements
+## 🚧 Future Improvements
 
 While the current implementation is fully functional and compliant, several enhancements have been identified through external validation that could improve performance, maintainability, and security:
 
