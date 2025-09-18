@@ -43,7 +43,7 @@ document.getElementById("startBtn").addEventListener("click", async () => {
 const DIFFICULTY_ORDER = ["A1", "A2", "B1", "B2", "C1", "C2"];
 
 let questions = [], usedQuestions = [], currentQuestion = {}, currentDifficultyIndex = 0;
-let score = 0, questionCount = 0, maxQuestions = 60;
+let score = 0, questionCount = 0, maxQuestions = 20;
 let passageMap = {}, rubrics = {};
 let reviewLog = []; // Stores answer data for summary review
 
@@ -193,7 +193,7 @@ form.innerHTML = ""; // Clear previous choices
 if (q.answerType === "spoken-response") {
   form.innerHTML += `
     <p><strong>Your task:</strong> Speak your response using the microphone below.</p>
-    <button id="recordBtn" class="btn btn-secondary mb-2">🎙️ Start Recording</button>
+      <button id="recordBtn" class="btn btn-secondary mb-2" type="button">🎙️ Start Recording</button>
     <p id="recordingStatus" class="text-muted mb-2"></p>
     <audio id="playback" class="d-none" controls></audio>
   `;
