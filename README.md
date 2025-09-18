@@ -89,19 +89,61 @@ The application has been rigorously tested across devices and validated for acce
 
 This section showcases the core user flow and design intent through wireframes and live UI captures.
 
-### 🧩 Wireframes
+---
 
-📷 *Wireframe – Quiz landing page layout with CEFR badge and rubric toggle*  
-📷 *Wireframe – Question rendering interface with dynamic scoring logic*  
-📷 *Wireframe – Final summary screen showing CEFR badge and export option*
+### 🧩 Wireframes  
+These mockups illustrate the intended layout and functionality before implementation, across both desktop and mobile views.
 
-### 🖼️ Live Screenshots
+#### 1. Landing Page  
+📷 *Wireframe – Landing page layout with CEFR badge and rubric toggle (desktop & mobile)*
+![Wireframe – Landing Desktop](./public/images/landing_page_desktop.png)
+![Wireframe – Landing Mobile](./public/images/landing_page_mobile.png)
 
-📷 *Screenshot – Quiz landing page with CEFR badge and rubric toggle*  
-📷 *Screenshot – Multiple-choice question with dynamic rendering and scoring*  
-📷 *Screenshot – Writing task with rubric-based scoring and feedback*  
-📷 *Screenshot – Speaking task with audio recording and transcript submission*  
-📷 *Screenshot – Final summary screen with CEFR badge and PDF export*
+#### 2. Multiple-Choice Question
+📷 *Wireframe – MCQ interface with dynamic scoring logic (desktop & mobile)*
+![Wireframe – MCQ Desktop](./public/images/multi_choice_desktop.png)
+![Wireframe – MCQ Mobile](./public/images/multi_choice_mobile.png)
+
+#### 3. Writing Task  
+📷 *Wireframe – Writing task with rubric-based scoring and feedback (desktop & mobile)*
+![Wireframe – Writing Desktop](./public/images/writing_desktop.png)
+![Wireframe – Writing Mobile](./public/images/writing_mobile.png)
+
+#### 4. Speaking Task  
+📷 *Wireframe – Speaking task with audio recording and transcript submission (desktop & mobile)*
+![Wireframe – Speaking Desktop](./public/images/speaking_desktop.png)
+![Wireframe – Speaking Mobile](./public/images/speaking_mobile.png)
+
+#### 5. Summary Screen  
+📷 *Wireframe – Final summary screen showing CEFR badge and export option (desktop & mobile)*
+![Wireframe – Summary Desktop](./public/images/summary_desktop.png)
+![Wireframe – Summary Mobile](./public/images/summary_mobile.png)
+
+---
+
+### 🖼️ Live Screenshots  
+Captured from the deployed app, these screenshots demonstrate the final user experience.
+
+#### 1. Landing Page  
+📷 *Screenshot – Quiz landing page with CEFR badge and rubric toggle*
+![Screenshot – Landing](./public/images/landing_page.png)
+
+#### 2. Multiple-Choice Question  
+📷 *Screenshot – Multiple-choice question with dynamic rendering and scoring*
+![Screenshot – MCQ](./public/images/multi_choice_question.png)
+
+#### 3. Writing Task  
+📷 *Screenshot – Writing task with rubric-based scoring and feedback*
+![Screenshot – Writing](./public/images/writing_question.png)
+
+#### 4. Speaking Task  
+📷 *Screenshot – Speaking task with audio recording and transcript submission*
+![Screenshot – Speaking](./public/images/speaking_question.png)
+![Screenshot – Speaking (Recording)](./public/images/speaking_question_recording.png)
+
+#### 5. Summary Screen  
+📷 *Screenshot – Final summary screen with CEFR badge and PDF export*  
+![Screenshot – Summary](./public/images/summary_card.png)
 
 ---
 
@@ -119,7 +161,18 @@ This project has been manually and externally validated for compliance, performa
 - ✅ Added `aria-live="polite"` to dynamic heading for accessibility
 - ✅ Provided fallback `src` for hidden `<img>` to avoid broken rendering
 
-📷 *Placeholder – W3C HTML Validator screenshot*
+This section demonstrates the HTML validation process using the W3C Validator.
+
+#### ❌ Before – HTML Errors Detected  
+Common issues included missing alt attributes and unclosed tags.
+
+![HTML Validator – Errors 1](./public/images/html_errors_1.png)
+![HTML Validator – Errors 2](./public/images/html_errors_2.png)
+
+#### ✅ After – HTML Cleared  
+All structural and semantic issues were resolved.
+
+![HTML Validator – Cleared](./public/images/html_validated.png)
 
 ---
 
@@ -130,7 +183,12 @@ This project has been manually and externally validated for compliance, performa
 - ✅ No deprecated properties or orphaned selectors
 - ✅ Externalized into `public/css/style.css` for maintainability
 
-📷 *Placeholder – CSS Validator screenshot*
+This section demonstrates the CSS validation result.
+
+#### ✅ CSS Cleared  
+All styles passed validation without errors.
+
+![CSS Validator – Cleared](./public/images/css_validated.png)
 
 ---
 
@@ -148,7 +206,19 @@ This project has been manually and externally validated for compliance, performa
 - Ensure all referenced DOM elements exist to prevent null errors
 - Consider refactoring large functions like `renderQuestion()` and `checkAnswer()` into smaller helpers for readability
 
-📷 *Placeholder – Workik validation screenshot (app.js)*
+#### ❌ Before – Legacy JavaScript Issues (`app.js`)  
+Screenshots below highlight global scope pollution, missing `await`, and inconsistent event handling.
+
+![JS Validator – Old Code 1](./public/images/js_validation_1.png)
+![JS Validator – Old Code 2](./public/images/js_validation_2.png)
+![JS Validator – Old Code 3](./public/images/js_validation_3.png)
+![JS Validator – Old Code 4](./public/images/js_validation_4.png)
+
+#### ✅ After – Modern JavaScript Syntax  
+Refactored code uses scoped listeners, async logic, and modular structure.  
+Validation passed with no errors.
+
+![JS Validator – New Code](./public/images/new_js_validation.png)
 
 ---
 
@@ -163,7 +233,7 @@ All core frontend logic was manually tested across supported question types:
 - ✅ Progress tracking: question count updates and final summary screen confirmed
 - ✅ Responsive layout: tested across desktop and mobile browsers
 
-📷 *Placeholder – Screenshot of validated frontend logic (quiz flow)*
+🖼️ Screenshots of each UI state — including landing, question types, and summary — are shown in the [Screenshots & Wireframes](#-screenshots--wireframes) section above.
 
 ---
 
@@ -171,8 +241,7 @@ All core frontend logic was manually tested across supported question types:
 
 #### `main.py`
 
-Validated using [AIpy Python Code Checker](https://aipy.dev/tools/python-code-checker):
-
+- ✅ Validated using [AIpy Python Code Checker](https://aipy.dev/tools/python-code-checker)
 - ✅ Syntax: No errors; uses type annotations and Pydantic models
 - ✅ Style: Mostly PEP 8 compliant; minor suggestions for modularization and naming
 - ✅ Error Handling: Uses `HTTPException` and `JSONResponse` effectively
@@ -180,12 +249,27 @@ Validated using [AIpy Python Code Checker](https://aipy.dev/tools/python-code-ch
 - ✅ Performance: Database queries and transcription service flagged for optimization
 - ✅ Suggested Improvements: Logging via `logging` module, input sanitization, async transcription
 
-📷 *Placeholder – AIpy validation screenshot (main.py)*
+#### ❌ Before – Legacy Issues (`main.py`)  
+Screenshots below highlight inconsistent error handling, missing type annotations, and tightly coupled logic.
+
+![main.py – Old Code 1](./public/images/main_py_validation_1.png)
+![main.py – Old Code 2](./public/images/main_py_validation_2.png)
+![main.py – Old Code 3](./public/images/main_py_validation_3.png)
+![main.py – Old Code 4](./public/images/main_py_validation_4.png)
+
+#### ✅ After – Refactored and Validated (`main.py`)  
+Code now uses async logic, modular structure, and improved error handling.
+
+![main.py – New Code 1](./public/images/new_main_py_validation_1.png)
+![main.py – New Code 2](./public/images/new_main_py_validation_2.png)
+![main.py – New Code 3](./public/images/new_main_py_validation_3.png)
+![main.py – New Code 4](./public/images/new_main_py_validation_4.png)
+
+---
 
 #### `db_utils.py`
 
-Validated using [AIpy Python Code Checker](https://aipy.dev/tools/python-code-checker):
-
+- ✅ Validated using [AIpy Python Code Checker](https://aipy.dev/tools/python-code-checker)
 - ✅ Syntax: No errors; executable and clean
 - ✅ Style: Mostly PEP 8 compliant; suggestions for line length, naming, and docstrings
 - ✅ Best Practices: Secure use of `dotenv`, parameterized queries, exception handling
@@ -193,7 +277,21 @@ Validated using [AIpy Python Code Checker](https://aipy.dev/tools/python-code-ch
 - ✅ Security: SQL injection mitigated; logging of sensitive data should be privacy-aware
 - ✅ Suggested Improvements: Modularization, type annotations, pagination, enhanced logging
 
-📷 *Placeholder – AIpy validation screenshot (db_utils.py)*
+#### ❌ Before – Legacy Issues (`db_utils.py`)  
+Screenshots show verbose logic, missing docstrings, and inconsistent query handling.
+
+![db_utils.py – Old Code 1](./public/images/db_utils_py_validation_1.png)
+![db_utils.py – Old Code 2](./public/images/db_utils_py_validation_2.png)
+![db_utils.py – Old Code 3](./public/images/db_utils_py_validation_3.png)
+![db_utils.py – Old Code 4](./public/images/db_utils_py_validation_4.png)
+
+#### ✅ After – Refactored and Validated (`db_utils.py`)  
+Code now uses modular functions, parameterized queries, and consistent naming.
+
+![db_utils.py – New Code 1](./public/images/new_db_utils_py_validation_1.png)
+![db_utils.py – New Code 2](./public/images/new_db_utils_py_validation_2.png)
+![db_utils.py – New Code 3](./public/images/new_db_utils_py_validation_3.png)
+![db_utils.py – New Code 4](./public/images/new_db_utils_py_validation_4.png)
 
 ## 🚀 Deployment
 
